@@ -1,5 +1,12 @@
 # ProjetMC2d
 Projet d'Algo S2
+
+* Ordre de niveaux :
+    - desert 
+    - plaine 
+    - grotte 
+    - sakura ( fin portail nether) 
+
 * Biome minecraft terre :
     - desert 
         - chemin
@@ -21,9 +28,13 @@ Projet d'Algo S2
 
     - sakura
         - fond 
-            - 
+            - ciel soleil et nuage 
     - grotte
+        - fond de roche , torche , minerais 
+        - monstre classque 
     - village
+        - fond de village 
+        - créature villageois 
     
 * Monstres :
     - zombies 
