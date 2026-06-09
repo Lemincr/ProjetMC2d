@@ -101,11 +101,11 @@ void gestionEvenement(EvenementGfx evenement)
 			Player.playerPos.x = largeurFenetre()/2;
 			Player.playerPos.y = hauteurFenetre()/2;
 			DonneesImageRGB * pImagePerso;
-			pImagePerso = lisBMPRGB("/home/isen/travail/projetS2/images/steve.bmp");
+			pImagePerso = lisBMPRGB("/home/isen/workspace/algo2/images/steve.bmp");
 			DonneesImageRGB imagePerso = *pImagePerso;
 			Player.donneesImage = imagePerso.donneesRGB;
 			
-			p1 = initPlateforme(16, 16, 20*COTE_PLATEFORME, 2*COTE_PLATEFORME, "/home/isen/travail/projetS2/images/grass.bmp");
+			p1 = initPlateforme(16, 16, 20*COTE_PLATEFORME, 2*COTE_PLATEFORME, "/home/isen/workspace/algo2/images/grass.bmp");
 			
 			/* Le message "Initialisation" est envoye une seule fois, au debut du
 			programme : il permet de fixer "image" a la valeur qu'il devra conserver
@@ -144,6 +144,8 @@ void gestionEvenement(EvenementGfx evenement)
 			
 			// On part d'un fond d'ecran blanc
 			effaceFenetre (255, 255, 255);
+			 rectangle(0, 0, largeurFenetre(), hauteurFenetre());
+			 couleurCourante(0, 0, 0);
 			affichePersonnage(Player);
 			affichePlateforme(p1);
 			break;
@@ -265,6 +267,7 @@ void affichePlateforme(Plateforme p) {
 		}
 	}	
 }
+
 
 Plateforme initPlateforme(int x1, int y1, int larg, int haut, char *lienTexture) {
 	Plateforme p;
