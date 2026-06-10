@@ -4,7 +4,6 @@
 #include "GfxLib.h" // Seul cet include est necessaire pour faire du graphique
 #include "BmpLib.h" // Cet include permet de manipuler des fichiers BMP
 #include "ESLib.h" // Pour utiliser valeurAleatoire()
-#include "menu.h" // Pour le menu principal
 
 // Largeur et hauteur par defaut d'une image correspondant a nos criteres
 #define LargeurFenetre 800
@@ -36,14 +35,20 @@ typedef struct plateforme {
 } Plateforme;
 
 void affichePersonnage(Personnage p);
+
 void affichePlateforme(Plateforme p);
+
 Plateforme initPlateforme(int x1, int y1, int largeur, int hauteur, char *lienTexture);
+
+int checkCollision(Personnage perso, Plateforme plat);
+
+void gereCollisionPlateforme(Personnage *perso, Plateforme plat, int *vy, int *jumps);
 
 int main(int argc, char **argv)
 {
 	initialiseGfx(argc, argv);
 	
-	prepareFenetreGraphique("Minecraft 2D", LargeurFenetre, HauteurFenetre);
+	prepareFenetreGraphique("OpenGL", LargeurFenetre, HauteurFenetre);
 	
 	/* Lance la boucle qui aiguille les evenements sur la fonction gestionEvenement ci-apres,
 		qui elle-meme utilise fonctionAffichage ci-dessous */
@@ -51,6 +56,8 @@ int main(int argc, char **argv)
 	
 	return 0;
 }
+
+
 
 /* Fonction de trace de cercle */
 void cercle(float centreX, float centreY, float rayon)
@@ -67,15 +74,19 @@ void cercle(float centreX, float centreY, float rayon)
 				 centreX+rayon*cos(angle+PasAngulaire), centreY+rayon*sin(angle+PasAngulaire));
 			// On trace le secteur a l'aide d'un triangle => approximation d'un cercle
 	}
+	
 }
+
+
+
 
 /* La fonction de gestion des evenements, appelee automatiquement par le systeme
 des qu'une evenement survient */
 void gestionEvenement(EvenementGfx evenement)
 {
-	static bool pleinEcran = false; 
-    static EtatJeu etat = ETAT_MENU;
+	static bool pleinEcran = false; // Pour savoir si on est en mode plein ecran ou 
 
+	/* On va aussi animer une balle traversant l'ecran */
 	static int xBalle;
 	static int yBalle;
 	static int vxBalle = 7;
@@ -83,139 +94,181 @@ void gestionEvenement(EvenementGfx evenement)
 	
 	static Personnage Player;
 	static Plateforme p1;
-	static unsigned char *textureFondMenu = NULL;
 	
 	static int vyPerso = 0;
+	static int jumps = 0;
+	
 	
 	switch (evenement)
 	{
 		case Initialisation:
+			
 			Player.playerPos.x = largeurFenetre()/2;
 			Player.playerPos.y = hauteurFenetre()/2;
 			DonneesImageRGB * pImagePerso;
-			pImagePerso = lisBMPRGB("images/steve.bmp");
-            if (pImagePerso != NULL)
-			    Player.donneesImage = pImagePerso->donneesRGB;
+			pImagePerso = lisBMPRGB("./images/steve.bmp");
+			DonneesImageRGB imagePerso = *pImagePerso;
+			Player.donneesImage = imagePerso.donneesRGB;
 			
-			p1 = initPlateforme(16, 16, 20*COTE_PLATEFORME, 2*COTE_PLATEFORME, "images/grass.bmp");
+			p1 = initPlateforme(16, 16, 20*COTE_PLATEFORME, 2*COTE_PLATEFORME, "./images/grass.bmp");
 			
-            DonneesImageRGB *pImageFond = lisBMPRGB("images/dirt.bmp");
-            if (pImageFond != NULL)
-                textureFondMenu = pImageFond->donneesRGB;
+			/* Le message "Initialisation" est envoye une seule fois, au debut du
+			programme : il permet de fixer "image" a la valeur qu'il devra conserver
+			jusqu'a la fin du programme : soit "image" reste a NULL si l'image n'a
+			pas pu etre lue, soit "image" pointera sur une structure contenant
+			les caracteristiques de l'image "imageNB.bmp" */
 
+			// Configure le systeme pour generer un message Temporisation
+			// toutes les 20 millisecondes
+			
 			demandeTemporisation(20);
 			break;
 		
 		case Temporisation:
-            if (etat == ETAT_JEU) {
-                // On met a jour les coordonnees de la balle
-                xBalle += vxBalle;
-                yBalle += vyBalle;
-                
-                // GRAVITE
-                vyPerso -= 1;
-                
-                Player.playerPos.y += vyPerso;
-                
-                // On fait rebondir la balle si necessaire
-                if (xBalle < 0 || xBalle >= largeurFenetre())
-                    vxBalle = -vxBalle;
-                if (yBalle < 0 || yBalle >= hauteurFenetre())
-                    vyBalle = -vyBalle;
-            }
+			// On met a jour les coordonnees de la balle
+			xBalle += vxBalle;
+			yBalle += vyBalle;
+			
+			
+			// GRAVITE
+			vyPerso -= 1;
+			
+			gereCollisionPlateforme(&Player, p1, &vyPerso, &jumps);
+			
+			Player.playerPos.y += vyPerso;
+			// Les coordonnees de la balle ayant eventuellement change,
+			// il faut redessiner la fenetre :
 			rafraichisFenetre();
 			break;
 			
 		case Affichage:
-			effaceFenetre(255, 255, 255);
-            if (etat == ETAT_MENU) {
-                afficheMenu(largeurFenetre(), hauteurFenetre(), textureFondMenu);
-            } else {
-                rectangle(0, 0, largeurFenetre(), hauteurFenetre());
-                couleurCourante(0, 0, 0);
-                affichePersonnage(Player);
-                affichePlateforme(p1);
-            }
+			
+			// On part d'un fond d'ecran blanc
+			effaceFenetre (255, 255, 255);
+			affichePersonnage(Player);
+			affichePlateforme(p1);
 			break;
 			
 		case Clavier:
+			printf("%c : ASCII %d\n", caractereClavier(), caractereClavier());
+
 			switch (caractereClavier())
 			{
 				case 'F':
 				case 'f':
-					pleinEcran = !pleinEcran; 
+					pleinEcran = !pleinEcran; // Changement de mode plein ecran
 					if (pleinEcran)
 						modePleinEcran();
 					else
 						redimensionneFenetre(LargeurFenetre, HauteurFenetre);
 					break;
+
+				case 'R':
+				case 'r':
+					// Configure le systeme pour generer un message Temporisation
+					// toutes les 20 millisecondes (rapide)
+					demandeTemporisation(20);
+					break;
+
+				case 'L':
+				case 'l':
+					// Configure le systeme pour generer un message Temporisation
+					// toutes les 100 millisecondes (lent)
+					demandeTemporisation(100);
+					break;
+
+				case 'S':
+				case 's':
+					// Configure le systeme pour ne plus generer de message Temporisation
+					demandeTemporisation(-1);
+					break;
 				case 'Q':
 				case 'q':
-                    if (etat == ETAT_JEU) Player.playerPos.x -= 10;
+					Player.playerPos.x -= 10;
 					break;
 				case 'D':
 				case 'd':
-					if (etat == ETAT_JEU) Player.playerPos.x += 10;
+					Player.playerPos.x += 10;
 					break;
 				case 'Z':
 				case 'z':
-					if (etat == ETAT_JEU) vyPerso = 10;
+					if (jumps != 0) {
+						vyPerso = 10;
+						jumps = 0;
+					}
 					break;
-                case 27: // Echap
-                    if (etat == ETAT_JEU) etat = ETAT_MENU;
-                    else termineBoucleEvenements();
-                    break;
 			}
 			break;
 			
 		case ClavierSpecial:
+			printf("ASCII %d\n", toucheClavier());
 			break;
 
 		case BoutonSouris:
-			if (etatBoutonSouris() == GaucheAppuye)
+			switch (etatBoutonSouris())
 			{
-                if (etat == ETAT_MENU) {
-                    Bouton bJouer = getBoutonJouer(largeurFenetre(), hauteurFenetre());
-                    Bouton bQuitter = getBoutonQuitter(largeurFenetre(), hauteurFenetre());
-                    
-                    if (estSurBouton(abscisseSouris(), ordonneeSouris(), bJouer)) {
-                        etat = ETAT_JEU;
-                    } else if (estSurBouton(abscisseSouris(), ordonneeSouris(), bQuitter)) {
-                        termineBoucleEvenements();
-                    }
-                } else {
-                    xBalle = abscisseSouris();
-                    yBalle = ordonneeSouris();
-                }
+				case GaucheAppuye:
+					printf("Bouton gauche appuye en : (%d, %d)\n", abscisseSouris(), ordonneeSouris());
+					// Si le bouton gauche de la souris est appuye, faire repartir
+					// la balle de la souris
+					xBalle = abscisseSouris();
+					yBalle = ordonneeSouris();
+					break;
+				case GaucheRelache:
+					printf("Bouton gauche relache en : (%d, %d)\n", abscisseSouris(), ordonneeSouris());
+					break;
+				case DroiteAppuye:
+				case DroiteRelache:
+					puts("Bouton droite");
+					break;
+				case MilieuAppuye:
+				case MilieuRelache:
+					puts("Bouton milieu");
+					break;
+				case ScrollDown:
+					puts("Scroll down");
+					break;
+				case ScrollUp:
+					puts("Scroll up");
+					break;
+				case ScrollRight:
+					puts("Scroll right");
+					break;
+				case ScrollLeft:
+					puts("Scroll left");
+					break;
 			}
 			break;
 		
-		case Souris:
+		case Souris: // Si la souris est deplacee
 			break;
 		
-		case Inactivite:
+		case Inactivite: // Quand aucun message n'est disponible
 			break;
 		
-		case Redimensionnement:
+		case Redimensionnement: // La taille de la fenetre a ete modifie ou on est passe en plein ecran
+			// Donc le systeme nous en informe
+			if (xBalle >= largeurFenetre())
+				xBalle = largeurFenetre()-1;
+			if (yBalle >= hauteurFenetre())
+				yBalle = hauteurFenetre()-1;
+			printf("Largeur : %d\t", largeurFenetre());
+			printf("Hauteur : %d\n", hauteurFenetre());
 			break;
 	}
 }
 
 void affichePersonnage(Personnage p) {
-    if (p.donneesImage != NULL)
-	    ecrisImage(p.playerPos.x, p.playerPos.y, 32, 64, p.donneesImage);
+	ecrisImage(p.playerPos.x, p.playerPos.y, 32, 64, p.donneesImage);
 }
 
 void affichePlateforme(Plateforme p) {
-    if (p.texture != NULL) {
-        for (int i=0; i<(p.largeur/32); i++) {
-            for (int j=0; j<(p.hauteur/32); j++) {
-                ecrisImage((p.coinInferieurGauche.x + 32*i + 16), (p.coinInferieurGauche.y + 32*j + 16), 32, 32, p.texture);
-            }
-        }
-    }
+	for (int i=0; i<(p.largeur/32); i++) {
+		for (int j=0; j<(p.hauteur/32); j++) {
+			ecrisImage((p.coinInferieurGauche.x + 32*i + 16), (p.coinInferieurGauche.y + 32*j + 16), 32, 32, p.texture);
+		}
+	}	
 }
-
 
 Plateforme initPlateforme(int x1, int y1, int larg, int haut, char *lienTexture) {
 	Plateforme p;
@@ -223,13 +276,47 @@ Plateforme initPlateforme(int x1, int y1, int larg, int haut, char *lienTexture)
 	p.coinInferieurGauche.y = y1;
 	p.largeur = larg;
 	p.hauteur = haut;
-	p.texture = NULL;
 			
 	DonneesImageRGB * pImagePlat;
 	pImagePlat = lisBMPRGB(lienTexture);
-    if (pImagePlat != NULL) {
-	    DonneesImageRGB imagePlat = *pImagePlat;
-	    p.texture = imagePlat.donneesRGB;
-    }
+	DonneesImageRGB imagePlat = *pImagePlat;
+	p.texture = imagePlat.donneesRGB;
 	return p;
+}
+
+int checkCollision(Personnage perso, Plateforme plat) {
+	// trop à gauche
+	if (perso.playerPos.x + 8 < plat.coinInferieurGauche.x) {
+		return 0;
+	} 
+	
+	// trop à droite
+	else if (perso.playerPos.x - 8 > (plat.coinInferieurGauche.x + plat.largeur)) {
+		return 0;
+	}
+	
+	// en dessous
+	else if (perso.playerPos.y + 16 < plat.coinInferieurGauche.y) {
+		return 0;
+	}
+	
+	// trop haut (avec une marge)
+	else if (perso.playerPos.y - 18 > (plat.coinInferieurGauche.y + plat.hauteur)) {
+		return 0;
+	}
+	return 1;
+}
+
+void gereCollisionPlateforme(Personnage *perso, Plateforme plat, int *vy, int *jumps) {
+	if (checkCollision(*perso, plat) == 1) {
+		// check si on saute pas
+		if ((caractereClavier() == 'z') || (caractereClavier() == 'Z')) {
+			if (*vy >= 0) {
+				return;
+			}
+		}
+		*vy = 0;
+		perso->playerPos.y = plat.coinInferieurGauche.y + plat.hauteur + 17;
+		*jumps = 1;
+	}
 }
