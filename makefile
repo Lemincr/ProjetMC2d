@@ -1,9 +1,12 @@
 # Règle principale : compile l'exécutable "steve"
-main: main.o libisentlib.a
-	gcc -Wall main.o -o steve libisentlib.a -lm -lglut -lGL -lX11
+main: main.o menu.o libisentlib.a
+	gcc -Wall main.o menu.o -o steve libisentlib.a -lm -lglut -lGL -lX11
 
-main.o: main.c GfxLib.h BmpLib.h ESLib.h
+main.o: main.c GfxLib.h BmpLib.h ESLib.h menu.h
 	gcc -Wall -c main.c
+
+menu.o: menu.c menu.h GfxLib.h BmpLib.h
+	gcc -Wall -c menu.c
 
 # Compilation de la bibliothèque ISEN
 libisentlib.a: BmpLib.o ErreurLib.o ESLib.o GfxLib.o OutilsLib.o SocketLib.o ThreadLib.o TortueLib.o WavLib.o
