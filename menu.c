@@ -1,5 +1,50 @@
 #include "menu.h"
 #include <stddef.h>
+#include <stdlib.h>
+
+void ecrisImageTransparente(int x, int y, int largeur, int hauteur, const unsigned char *donnees) {
+    unsigned char *pixels = (unsigned char*)malloc(largeur * hauteur * 4);
+    if (pixels == NULL) return;
+
+    for (int i = 0; i < largeur * hauteur; ++i) {
+        // donnees est en BVR (Bleu, Vert, Rouge) d'après GfxLib.c
+        unsigned char b = donnees[i * 3];
+        unsigned char v = donnees[i * 3 + 1];
+        unsigned char r = donnees[i * 3 + 2];
+
+        pixels[i * 4] = b;
+        pixels[i * 4 + 1] = v;
+        pixels[i * 4 + 2] = r;
+
+        // Couleur de transparence demandée : 255 0 254 (R V B)
+        // Attention : l'ordre dans le tableau 'donnees' est BVR d'après GfxLib.c
+        if (r == 255 && v == 0 && b == 254) {
+            pixels[i * 4 + 3] = 0; // Transparent
+        } else {
+            pixels[i * 4 + 3] = 255; // Opaque
+        }
+    }
+    
+    // On utilise ecrisImageARVB de GfxLib pour envoyer les données avec alpha
+    // Sous Windows, ecrisImageARVB n'est pas dans GfxLib.h mais elle existe dans GfxLib.c
+    // Si on est sous Windows, on peut avoir besoin de la déclarer ou d'utiliser une alternative
+    // Mais d'après GfxLib.h, ecrisImageARVB est derrière un #ifndef _WIN32.
+    // Vérifions comment faire sous Windows.
+#ifdef _WIN32
+    // Sous Windows, on peut essayer d'utiliser glDrawPixels directement
+    // car GfxLib.c inclut windows.h et GL/gl.h (via GLUT probablement)
+    // Mais menu.c n'inclut pas forcément les headers OpenGL.
+    // Utilisons une approche compatible si possible.
+    // En fait, ecrisImageARVB est définie dans GfxLib.c même sous Windows, 
+    // elle n'est juste pas exportée dans le .h
+    extern void ecrisImageARVB(int x, int y, int largeur, int hauteur, const int *donneesARVB);
+    ecrisImageARVB(x, y, largeur, hauteur, (const int*)pixels);
+#else
+    ecrisImageARVB(x, y, largeur, hauteur, (const int*)pixels);
+#endif
+
+    free(pixels);
+}
 
 Bouton getBoutonJouer(int largeurFenetre, int hauteurFenetre) {
     Bouton b = {largeurFenetre/2 - 100, hauteurFenetre/2 + 20, 200, 40, "JOUER"};

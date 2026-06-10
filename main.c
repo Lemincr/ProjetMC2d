@@ -206,7 +206,7 @@ void gestionEvenement(EvenementGfx evenement)
 
 void affichePersonnage(Personnage p) {
     if (p.donneesImage != NULL)
-	    ecrisImage(p.playerPos.x, p.playerPos.y, 32, 64, p.donneesImage);
+	    ecrisImageTransparente(p.playerPos.x, p.playerPos.y, 32, 64, p.donneesImage);
 }
 
 void affichePlateforme(Plateforme p) {
