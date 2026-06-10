@@ -46,25 +46,11 @@ typedef struct camera {
     int x;
 } Camera;
 
-typedef struct ecran {
-	Plateforme solides[20];
-} Ecran;
-
 void affichePersonnage(Personnage p, Camera cam);
 void affichePlateforme(Plateforme p, Camera cam);
 Plateforme initPlateforme(int x1, int y1, int largeur, int hauteur, char *lienTexture);
 int checkCollision(Personnage perso, Plateforme plat);
 void gereCollisionPlateforme(Personnage *perso, Plateforme plat, int *vy, int *jumps);
-
-void afficheEcran(Ecran e, Camera cam);
-void gereCollisionEcran(Personnage *perso, Ecran e, int *vy, int *jumps);
-
-Plateforme initPlateformeVide();
-
-
-// LES ECRANS (ajouter une fonction pour chaque ecran)
-Ecran initEcran1();
-
 
 int main(int argc, char **argv)
 {
@@ -104,7 +90,7 @@ void gestionEvenement(EvenementGfx evenement)
     static EtatJeu etat = ETAT_MENU;
 
 	static Personnage Player;
-	static Ecran e1;
+	static Plateforme p1;
     static unsigned char *textureFondMenu = NULL;
     static Camera cam = {0};
 	
@@ -138,7 +124,7 @@ void gestionEvenement(EvenementGfx evenement)
                 }
             }
 			
-			e1 = initEcran1();
+			p1 = initPlateforme(16, 16, 100*COTE_PLATEFORME, 2*COTE_PLATEFORME, "images/grass.bmp");
 			
             DonneesImageRGB *pImageFond = lisBMPRGB("images/dirt.bmp");
             if (pImageFond != NULL)
@@ -151,21 +137,22 @@ void gestionEvenement(EvenementGfx evenement)
             if (etat == ETAT_JEU) {
                 // GRAVITE
                 vyPerso -= 1;
-                gereCollisionEcran(&Player, e1, &vyPerso, &jumps);
+                gereCollisionPlateforme(&Player, p1, &vyPerso, &jumps);
                 Player.playerPos.y += vyPerso;
 
                 // Animation
                 if (Player.enMouvement) {
                     Player.timerAnim++;
                     if (Player.timerAnim >= 5) { // Change de frame toutes les 100ms
+                        // Boucle simple 0 -> 1 -> 2 -> 3 -> 4 -> 0
                         Player.frameActuelle = (Player.frameActuelle + 1) % NB_SPRITES_MARCHE;
                         Player.timerAnim = 0;
                     }
                 } else {
-                    Player.frameActuelle = 0; // Frame d'arrêt
+                    Player.frameActuelle = 0; // Frame d'arrêt (steve.bmp)
                 }
 
-                // Reset mouvement pour le prochain cycle
+                // Reset mouvement pour le prochain cycle (sera mis à jour par Clavier)
                 Player.enMouvement = false;
 
                 // Caméra
@@ -180,7 +167,7 @@ void gestionEvenement(EvenementGfx evenement)
             if (etat == ETAT_MENU) {
                 afficheMenu(largeurFenetre(), hauteurFenetre(), textureFondMenu);
             } else {
-                afficheEcran(e1, cam);
+                affichePlateforme(p1, cam);
                 affichePersonnage(Player, cam);
             }
 			break;
@@ -291,11 +278,17 @@ void affichePersonnage(Personnage p, Camera cam) {
     int l = p.largeurs[p.frameActuelle];
     int h = p.hauteurs[p.frameActuelle];
     
+    // On centre Steve horizontalement par rapport à sa largeur pour éviter le décalage (bobbing)
+    // On l'aligne par le bas (ses pieds) sur la position Y pour éviter qu'il flotte
+    int offsetCenterX = p.largeurs[0] / 2 - l / 2;
+    int drawX = (p.playerPos.x - cam.x) + offsetCenterX;
+    int drawY = p.playerPos.y;
+
     if (sprite != NULL && l > 0 && h > 0) {
         if (p.regardeADroite) {
-	        ecrisImageTransparente(p.playerPos.x - cam.x, p.playerPos.y, l, h, sprite);
+	        ecrisImageTransparente(drawX, drawY, l, h, sprite);
         } else {
-            ecrisImageInversee(p.playerPos.x - cam.x, p.playerPos.y, l, h, sprite);
+            ecrisImageInversee(drawX, drawY, l, h, sprite);
         }
     }
 }
@@ -327,7 +320,6 @@ Plateforme initPlateforme(int x1, int y1, int larg, int haut, char *lienTexture)
 }
 
 int checkCollision(Personnage perso, Plateforme plat) {
-    // On utilise les dimensions de la frame 0 pour la collision par simplicité
     int l = perso.largeurs[0];
     int h = perso.hauteurs[0];
 	if (perso.playerPos.x + l/4 < plat.coinInferieurGauche.x) return 0;
@@ -346,36 +338,4 @@ void gereCollisionPlateforme(Personnage *perso, Plateforme plat, int *vy, int *j
 		perso->playerPos.y = plat.coinInferieurGauche.y + plat.hauteur + perso->hauteurs[0]/4 + 1;
 		*jumps = 1;
 	}
-}
-
-void afficheEcran(Ecran e, Camera cam) {
-	for (int i=0; i<20; i++) {
-		affichePlateforme(e.solides[i], cam);
-	}
-}
-
-void gereCollisionEcran(Personnage *perso, Ecran e, int *vy, int *jumps) {
-	for (int i=0; i<20; i++) {
-		gereCollisionPlateforme(perso, e.solides[i], vy, jumps);
-	}
-}
-
-Plateforme initPlateformeVide() {
-	Plateforme p;
-	p.coinInferieurGauche.x = 0;
-	p.coinInferieurGauche.y = 0;
-	p.largeur = 0;
-	p.hauteur = 0;
-	p.texture = NULL;
-	return p;
-}
-
-Ecran initEcran1() {
-	Ecran e;
-	e.solides[0] = initPlateforme(0, 0, 25*COTE_PLATEFORME, 2*COTE_PLATEFORME, "images/dirt.bmp");
-	e.solides[1] = initPlateforme(0, 2*COTE_PLATEFORME, 25*COTE_PLATEFORME, 1*COTE_PLATEFORME, "images/grass.bmp");
-	for (int i=2; i<20; i++) {
-		e.solides[i] = initPlateformeVide();
-	}
-	return e;
 }
