@@ -121,6 +121,7 @@ void gestionEvenement(EvenementGfx evenement)
 	
 	static int vyPerso = 0;
 	static int jumps = 0;
+	static int direction = 0;
 	
 	switch (evenement)
 	{
@@ -192,7 +193,19 @@ void gestionEvenement(EvenementGfx evenement)
                 vyPerso -= 1;
                 gereCollisionPlateforme(&Player, p1, &vyPerso, &jumps);
                 Player.playerPos.y += vyPerso;
-
+		
+		if (direction == 1) {
+			Player.playerPos.x += 5;
+                        Player.regardeADroite = true;
+                        Player.enMouvement = true;
+		}
+		else if (direction == -1) {
+			Player.playerPos.x -= 5;
+                        Player.regardeADroite = false;
+                        Player.enMouvement = true;
+		}
+		
+		
                 // Animation Player
                 if (Player.enMouvement) {
                     Player.timerAnim++;
@@ -254,18 +267,26 @@ void gestionEvenement(EvenementGfx evenement)
 				case 'Q':
 				case 'q':
                     if (etat == ETAT_JEU) {
-                        Player.playerPos.x -= 10;
-                        Player.regardeADroite = false;
-                        Player.enMouvement = true;
+     
+                        			if (direction == -1) {
+                        				direction = 0;
+                        			}
+                        			else {
+                        				direction = -1;
+                        			}
+                   			
                     }
 					break;
 				case 'D':
 				case 'd':
 					if (etat == ETAT_JEU) {
-                        Player.playerPos.x += 10;
-                        Player.regardeADroite = true;
-                        Player.enMouvement = true;
-                    }
+                        			if (direction == 1) {
+                        				direction = 0;
+                        			}
+                        			else {
+                        				direction = 1;
+                        			}
+                   			}
 					break;
 				case 'Z':
 				case 'z':
