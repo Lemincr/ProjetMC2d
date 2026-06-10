@@ -12,6 +12,7 @@
 
 #define COTE_PLATEFORME 32
 #define NB_SPRITES_MARCHE 5
+#define NB_SPRITES_SQUELETTE 4
 
 // Fonction de trace de cercle
 void cercle(float centreX, float centreY, float rayon);
@@ -35,6 +36,19 @@ typedef struct personnage {
     bool enMouvement;
 } Personnage;
 
+typedef struct squelette {
+    Coord pos;
+    unsigned char *sprites[NB_SPRITES_SQUELETTE];
+    int largeurs[NB_SPRITES_SQUELETTE];
+    int hauteurs[NB_SPRITES_SQUELETTE];
+    int frameActuelle;
+    int timerAnim;
+    bool regardeADroite;
+    int vx;
+    int range;
+    int origineX;
+} Squelette;
+
 typedef struct plateforme {
 	Coord coinInferieurGauche;
 	int largeur;
@@ -46,11 +60,20 @@ typedef struct camera {
     int x;
 } Camera;
 
+typedef struct background {
+    unsigned char *texture;
+    int largeur;
+    int hauteur;
+} Background;
+
 void affichePersonnage(Personnage p, Camera cam);
+void afficheSquelette(Squelette s, Camera cam);
 void affichePlateforme(Plateforme p, Camera cam);
+void afficheBackground(Background bg, Camera cam);
 Plateforme initPlateforme(int x1, int y1, int largeur, int hauteur, char *lienTexture);
 int checkCollision(Personnage perso, Plateforme plat);
 void gereCollisionPlateforme(Personnage *perso, Plateforme plat, int *vy, int *jumps);
+void ecrisImageInversee(int x, int y, int largeur, int hauteur, const unsigned char *donnees);
 
 int main(int argc, char **argv)
 {
@@ -93,9 +116,12 @@ void gestionEvenement(EvenementGfx evenement)
 	static Plateforme p1;
     static unsigned char *textureFondMenu = NULL;
     static Camera cam = {0};
+    static Background bgJeu = {NULL, 0, 0};
+    static Squelette mob1;
 	
 	static int vyPerso = 0;
 	static int jumps = 0;
+	static int direction = 0;
 	
 	switch (evenement)
 	{
@@ -123,12 +149,40 @@ void gestionEvenement(EvenementGfx evenement)
                     Player.hauteurs[i] = 0;
                 }
             }
+
+            // Initialisation Squelette
+            mob1.pos.x = 600;
+            mob1.pos.y = 100;
+            mob1.origineX = 600;
+            mob1.range = 200;
+            mob1.vx = 2;
+            mob1.frameActuelle = 0;
+            mob1.timerAnim = 0;
+            mob1.regardeADroite = false;
+            for (int i = 0; i < NB_SPRITES_SQUELETTE; i++) {
+                if (i == 0) sprintf(chemin, "images/squelette.bmp");
+                else sprintf(chemin, "images/squelette%d.bmp", i + 1);
+                
+                DonneesImageRGB *img = lisBMPRGB(chemin);
+                if (img != NULL) {
+                    mob1.sprites[i] = img->donneesRGB;
+                    mob1.largeurs[i] = img->largeurImage;
+                    mob1.hauteurs[i] = img->hauteurImage;
+                }
+            }
 			
-			p1 = initPlateforme(16, 16, 100*COTE_PLATEFORME, 2*COTE_PLATEFORME, "images/grass.bmp");
+			p1 = initPlateforme(16, 16, 200*COTE_PLATEFORME, 2*COTE_PLATEFORME, "images/grass.bmp");
 			
-            DonneesImageRGB *pImageFond = lisBMPRGB("images/dirt.bmp");
-            if (pImageFond != NULL)
-                textureFondMenu = pImageFond->donneesRGB;
+            DonneesImageRGB *pImageFondMenu = lisBMPRGB("images/dirt.bmp");
+            if (pImageFondMenu != NULL)
+                textureFondMenu = pImageFondMenu->donneesRGB;
+
+            DonneesImageRGB *pImageBgJeu = lisBMPRGB("images/backgroundlevel1.bmp");
+            if (pImageBgJeu != NULL) {
+                bgJeu.texture = pImageBgJeu->donneesRGB;
+                bgJeu.largeur = pImageBgJeu->largeurImage;
+                bgJeu.hauteur = pImageBgJeu->hauteurImage;
+            }
 
 			demandeTemporisation(20);
 			break;
@@ -139,21 +193,45 @@ void gestionEvenement(EvenementGfx evenement)
                 vyPerso -= 1;
                 gereCollisionPlateforme(&Player, p1, &vyPerso, &jumps);
                 Player.playerPos.y += vyPerso;
-
-                // Animation
+		
+		if (direction == 1) {
+			Player.playerPos.x += 5;
+                        Player.regardeADroite = true;
+                        Player.enMouvement = true;
+		}
+		else if (direction == -1) {
+			Player.playerPos.x -= 5;
+                        Player.regardeADroite = false;
+                        Player.enMouvement = true;
+		}
+		
+		
+                // Animation Player
                 if (Player.enMouvement) {
                     Player.timerAnim++;
-                    if (Player.timerAnim >= 5) { // Change de frame toutes les 100ms
-                        // Boucle simple 0 -> 1 -> 2 -> 3 -> 4 -> 0
+                    if (Player.timerAnim >= 5) {
                         Player.frameActuelle = (Player.frameActuelle + 1) % NB_SPRITES_MARCHE;
                         Player.timerAnim = 0;
                     }
                 } else {
-                    Player.frameActuelle = 0; // Frame d'arrêt (steve.bmp)
+                    Player.frameActuelle = 0;
                 }
-
-                // Reset mouvement pour le prochain cycle (sera mis à jour par Clavier)
                 Player.enMouvement = false;
+
+                // IA Squelette
+                mob1.pos.x += mob1.vx;
+                if (mob1.pos.x > mob1.origineX + mob1.range) {
+                    mob1.vx = -2;
+                    mob1.regardeADroite = true;
+                } else if (mob1.pos.x < mob1.origineX - mob1.range) {
+                    mob1.vx = 2;
+                    mob1.regardeADroite = false;
+                }
+                mob1.timerAnim++;
+                if (mob1.timerAnim >= 5) {
+                    mob1.frameActuelle = (mob1.frameActuelle + 1) % NB_SPRITES_SQUELETTE;
+                    mob1.timerAnim = 0;
+                }
 
                 // Caméra
                 cam.x = Player.playerPos.x - LargeurFenetre / 2;
@@ -167,7 +245,9 @@ void gestionEvenement(EvenementGfx evenement)
             if (etat == ETAT_MENU) {
                 afficheMenu(largeurFenetre(), hauteurFenetre(), textureFondMenu);
             } else {
+                afficheBackground(bgJeu, cam);
                 affichePlateforme(p1, cam);
+                afficheSquelette(mob1, cam);
                 affichePersonnage(Player, cam);
             }
 			break;
@@ -187,18 +267,26 @@ void gestionEvenement(EvenementGfx evenement)
 				case 'Q':
 				case 'q':
                     if (etat == ETAT_JEU) {
-                        Player.playerPos.x -= 10;
-                        Player.regardeADroite = false;
-                        Player.enMouvement = true;
+     
+                        			if (direction == -1) {
+                        				direction = 0;
+                        			}
+                        			else {
+                        				direction = -1;
+                        			}
+                   			
                     }
 					break;
 				case 'D':
 				case 'd':
 					if (etat == ETAT_JEU) {
-                        Player.playerPos.x += 10;
-                        Player.regardeADroite = true;
-                        Player.enMouvement = true;
-                    }
+                        			if (direction == 1) {
+                        				direction = 0;
+                        			}
+                        			else {
+                        				direction = 1;
+                        			}
+                   			}
 					break;
 				case 'Z':
 				case 'z':
@@ -244,7 +332,13 @@ void gestionEvenement(EvenementGfx evenement)
 	}
 }
 
-// Fonction utilitaire pour retourner une image horizontalement
+void afficheBackground(Background bg, Camera cam) {
+    if (bg.texture != NULL) {
+        // Fond fixe par rapport à la caméra (bloqué sur l'écran)
+        ecrisImage(0, 0, bg.largeur, bg.hauteur, bg.texture);
+    }
+}
+
 void ecrisImageInversee(int x, int y, int largeur, int hauteur, const unsigned char *donnees) {
     if (largeur <= 0 || hauteur <= 0) return;
     unsigned char *pixels = (unsigned char*)malloc(largeur * hauteur * 4);
@@ -278,8 +372,6 @@ void affichePersonnage(Personnage p, Camera cam) {
     int l = p.largeurs[p.frameActuelle];
     int h = p.hauteurs[p.frameActuelle];
     
-    // On centre Steve horizontalement par rapport à sa largeur pour éviter le décalage (bobbing)
-    // On l'aligne par le bas (ses pieds) sur la position Y pour éviter qu'il flotte
     int offsetCenterX = p.largeurs[0] / 2 - l / 2;
     int drawX = (p.playerPos.x - cam.x) + offsetCenterX;
     int drawY = p.playerPos.y;
@@ -289,6 +381,23 @@ void affichePersonnage(Personnage p, Camera cam) {
 	        ecrisImageTransparente(drawX, drawY, l, h, sprite);
         } else {
             ecrisImageInversee(drawX, drawY, l, h, sprite);
+        }
+    }
+}
+
+void afficheSquelette(Squelette s, Camera cam) {
+    unsigned char *sprite = s.sprites[s.frameActuelle];
+    int l = s.largeurs[s.frameActuelle];
+    int h = s.hauteurs[s.frameActuelle];
+    
+    int drawX = (s.pos.x - cam.x);
+    int drawY = s.pos.y;
+
+    if (sprite != NULL && l > 0 && h > 0) {
+        if (s.regardeADroite) {
+            ecrisImageInversee(drawX, drawY, l, h, sprite);
+        } else {
+            ecrisImageTransparente(drawX, drawY, l, h, sprite);
         }
     }
 }
