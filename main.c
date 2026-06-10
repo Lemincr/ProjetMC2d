@@ -123,6 +123,10 @@ void gestionEvenement(EvenementGfx evenement)
 	static int jumps = 0;
 	static int direction = 0;
 	
+	static int time = 500;
+	static int frameCounter = 0;
+	static char chrono[3];
+	
 	switch (evenement)
 	{
 		case Initialisation:
@@ -237,6 +241,17 @@ void gestionEvenement(EvenementGfx evenement)
                 cam.x = Player.playerPos.x - LargeurFenetre / 2;
                 if (cam.x < 0) cam.x = 0;
             }
+			frameCounter++;
+			if (frameCounter >= 50) {
+				time--;
+				frameCounter = 0;
+			}
+			sprintf(chrono, "%d", time);
+			
+			if (time <= 0) {
+				termineBoucleEvenements();
+			}
+			
 			rafraichisFenetre();
 			break;
 			
@@ -249,6 +264,7 @@ void gestionEvenement(EvenementGfx evenement)
                 affichePlateforme(p1, cam);
                 afficheSquelette(mob1, cam);
                 affichePersonnage(Player, cam);
+                afficheChaine(chrono, 24, 30, 550);
             }
 			break;
 			
