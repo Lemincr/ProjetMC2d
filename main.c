@@ -27,6 +27,8 @@ typedef struct coordonnees {
 typedef struct personnage {
 	Coord playerPos;
 	unsigned char *sprites[NB_SPRITES_MARCHE];
+    int largeurs[NB_SPRITES_MARCHE];
+    int hauteurs[NB_SPRITES_MARCHE];
     int frameActuelle;
     int timerAnim;
     bool regardeADroite;
@@ -111,8 +113,15 @@ void gestionEvenement(EvenementGfx evenement)
                 else sprintf(chemin, "images/steve%d.bmp", i + 1);
                 
                 DonneesImageRGB *img = lisBMPRGB(chemin);
-                if (img != NULL) Player.sprites[i] = img->donneesRGB;
-                else Player.sprites[i] = NULL;
+                if (img != NULL) {
+                    Player.sprites[i] = img->donneesRGB;
+                    Player.largeurs[i] = img->largeurImage;
+                    Player.hauteurs[i] = img->hauteurImage;
+                } else {
+                    Player.sprites[i] = NULL;
+                    Player.largeurs[i] = 0;
+                    Player.hauteurs[i] = 0;
+                }
             }
 			
 			p1 = initPlateforme(16, 16, 100*COTE_PLATEFORME, 2*COTE_PLATEFORME, "images/grass.bmp");
@@ -134,7 +143,7 @@ void gestionEvenement(EvenementGfx evenement)
                 // Animation
                 if (Player.enMouvement) {
                     Player.timerAnim++;
-                    if (Player.timerAnim >= 5) { // Change de frame toutes les 100ms (5 * 20ms)
+                    if (Player.timerAnim >= 5) { // Change de frame toutes les 100ms
                         Player.frameActuelle = (Player.frameActuelle + 1) % NB_SPRITES_MARCHE;
                         Player.timerAnim = 0;
                     }
@@ -142,7 +151,7 @@ void gestionEvenement(EvenementGfx evenement)
                     Player.frameActuelle = 0; // Frame d'arrêt
                 }
 
-                // Reset mouvement pour le prochain cycle (sera mis à jour par Clavier)
+                // Reset mouvement pour le prochain cycle
                 Player.enMouvement = false;
 
                 // Caméra
@@ -236,12 +245,12 @@ void gestionEvenement(EvenementGfx evenement)
 
 // Fonction utilitaire pour retourner une image horizontalement
 void ecrisImageInversee(int x, int y, int largeur, int hauteur, const unsigned char *donnees) {
+    if (largeur <= 0 || hauteur <= 0) return;
     unsigned char *pixels = (unsigned char*)malloc(largeur * hauteur * 4);
     if (pixels == NULL) return;
 
     for (int j = 0; j < hauteur; j++) {
         for (int i = 0; i < largeur; i++) {
-            // On prend le pixel à l'opposé sur la ligne
             int indexSource = (j * largeur + (largeur - 1 - i)) * 3;
             int indexDest = (j * largeur + i) * 4;
 
@@ -265,11 +274,14 @@ void ecrisImageInversee(int x, int y, int largeur, int hauteur, const unsigned c
 
 void affichePersonnage(Personnage p, Camera cam) {
     unsigned char *sprite = p.sprites[p.frameActuelle];
-    if (sprite != NULL) {
+    int l = p.largeurs[p.frameActuelle];
+    int h = p.hauteurs[p.frameActuelle];
+    
+    if (sprite != NULL && l > 0 && h > 0) {
         if (p.regardeADroite) {
-	        ecrisImageTransparente(p.playerPos.x - cam.x, p.playerPos.y, 32, 64, sprite);
+	        ecrisImageTransparente(p.playerPos.x - cam.x, p.playerPos.y, l, h, sprite);
         } else {
-            ecrisImageInversee(p.playerPos.x - cam.x, p.playerPos.y, 32, 64, sprite);
+            ecrisImageInversee(p.playerPos.x - cam.x, p.playerPos.y, l, h, sprite);
         }
     }
 }
@@ -301,10 +313,13 @@ Plateforme initPlateforme(int x1, int y1, int larg, int haut, char *lienTexture)
 }
 
 int checkCollision(Personnage perso, Plateforme plat) {
-	if (perso.playerPos.x + 8 < plat.coinInferieurGauche.x) return 0;
-	if (perso.playerPos.x - 8 > (plat.coinInferieurGauche.x + plat.largeur)) return 0;
-	if (perso.playerPos.y + 16 < plat.coinInferieurGauche.y) return 0;
-	if (perso.playerPos.y - 18 > (plat.coinInferieurGauche.y + plat.hauteur)) return 0;
+    // On utilise les dimensions de la frame 0 pour la collision par simplicité
+    int l = perso.largeurs[0];
+    int h = perso.hauteurs[0];
+	if (perso.playerPos.x + l/4 < plat.coinInferieurGauche.x) return 0;
+	if (perso.playerPos.x - l/4 > (plat.coinInferieurGauche.x + plat.largeur)) return 0;
+	if (perso.playerPos.y + h/4 < plat.coinInferieurGauche.y) return 0;
+	if (perso.playerPos.y - h/4 - 2 > (plat.coinInferieurGauche.y + plat.hauteur)) return 0;
 	return 1;
 }
 
@@ -314,7 +329,7 @@ void gereCollisionPlateforme(Personnage *perso, Plateforme plat, int *vy, int *j
 			if (*vy >= 0) return;
 		}
 		*vy = 0;
-		perso->playerPos.y = plat.coinInferieurGauche.y + plat.hauteur + 17;
+		perso->playerPos.y = plat.coinInferieurGauche.y + plat.hauteur + perso->hauteurs[0]/4 + 1;
 		*jumps = 1;
 	}
 }
