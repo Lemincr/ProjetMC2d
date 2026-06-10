@@ -11,6 +11,7 @@
 #define HauteurFenetre 600
 
 #define COTE_PLATEFORME 32
+#define NB_SPRITES_MARCHE 5
 
 // Fonction de trace de cercle
 void cercle(float centreX, float centreY, float rayon);
@@ -25,7 +26,11 @@ typedef struct coordonnees {
 
 typedef struct personnage {
 	Coord playerPos;
-	unsigned char *donneesImage;
+	unsigned char *sprites[NB_SPRITES_MARCHE];
+    int frameActuelle;
+    int timerAnim;
+    bool regardeADroite;
+    bool enMouvement;
 } Personnage;
 
 typedef struct plateforme {
@@ -95,12 +100,22 @@ void gestionEvenement(EvenementGfx evenement)
 		case Initialisation:
 			Player.playerPos.x = largeurFenetre()/2;
 			Player.playerPos.y = hauteurFenetre()/2;
-			DonneesImageRGB * pImagePerso;
-			pImagePerso = lisBMPRGB("images/steve.bmp");
-            if (pImagePerso != NULL)
-			    Player.donneesImage = pImagePerso->donneesRGB;
+            Player.frameActuelle = 0;
+            Player.timerAnim = 0;
+            Player.regardeADroite = true;
+            Player.enMouvement = false;
+
+			char chemin[50];
+            for (int i = 0; i < NB_SPRITES_MARCHE; i++) {
+                if (i == 0) sprintf(chemin, "images/steve.bmp");
+                else sprintf(chemin, "images/steve%d.bmp", i + 1);
+                
+                DonneesImageRGB *img = lisBMPRGB(chemin);
+                if (img != NULL) Player.sprites[i] = img->donneesRGB;
+                else Player.sprites[i] = NULL;
+            }
 			
-			p1 = initPlateforme(16, 16, 20*COTE_PLATEFORME, 2*COTE_PLATEFORME, "images/grass.bmp");
+			p1 = initPlateforme(16, 16, 100*COTE_PLATEFORME, 2*COTE_PLATEFORME, "images/grass.bmp");
 			
             DonneesImageRGB *pImageFond = lisBMPRGB("images/dirt.bmp");
             if (pImageFond != NULL)
@@ -116,10 +131,23 @@ void gestionEvenement(EvenementGfx evenement)
                 gereCollisionPlateforme(&Player, p1, &vyPerso, &jumps);
                 Player.playerPos.y += vyPerso;
 
-                // Mise à jour de la caméra pour suivre Steve
-                // Steve reste au centre si possible (x - Largeur/2)
+                // Animation
+                if (Player.enMouvement) {
+                    Player.timerAnim++;
+                    if (Player.timerAnim >= 5) { // Change de frame toutes les 100ms (5 * 20ms)
+                        Player.frameActuelle = (Player.frameActuelle + 1) % NB_SPRITES_MARCHE;
+                        Player.timerAnim = 0;
+                    }
+                } else {
+                    Player.frameActuelle = 0; // Frame d'arrêt
+                }
+
+                // Reset mouvement pour le prochain cycle (sera mis à jour par Clavier)
+                Player.enMouvement = false;
+
+                // Caméra
                 cam.x = Player.playerPos.x - LargeurFenetre / 2;
-                if (cam.x < 0) cam.x = 0; // On ne scrolle pas avant le début du niveau
+                if (cam.x < 0) cam.x = 0;
             }
 			rafraichisFenetre();
 			break;
@@ -129,7 +157,6 @@ void gestionEvenement(EvenementGfx evenement)
             if (etat == ETAT_MENU) {
                 afficheMenu(largeurFenetre(), hauteurFenetre(), textureFondMenu);
             } else {
-                // On dessine le fond ciel ou autre si besoin, ici blanc par défaut
                 affichePlateforme(p1, cam);
                 affichePersonnage(Player, cam);
             }
@@ -149,11 +176,19 @@ void gestionEvenement(EvenementGfx evenement)
 
 				case 'Q':
 				case 'q':
-                    if (etat == ETAT_JEU) Player.playerPos.x -= 10;
+                    if (etat == ETAT_JEU) {
+                        Player.playerPos.x -= 10;
+                        Player.regardeADroite = false;
+                        Player.enMouvement = true;
+                    }
 					break;
 				case 'D':
 				case 'd':
-					if (etat == ETAT_JEU) Player.playerPos.x += 10;
+					if (etat == ETAT_JEU) {
+                        Player.playerPos.x += 10;
+                        Player.regardeADroite = true;
+                        Player.enMouvement = true;
+                    }
 					break;
 				case 'Z':
 				case 'z':
@@ -199,9 +234,44 @@ void gestionEvenement(EvenementGfx evenement)
 	}
 }
 
+// Fonction utilitaire pour retourner une image horizontalement
+void ecrisImageInversee(int x, int y, int largeur, int hauteur, const unsigned char *donnees) {
+    unsigned char *pixels = (unsigned char*)malloc(largeur * hauteur * 4);
+    if (pixels == NULL) return;
+
+    for (int j = 0; j < hauteur; j++) {
+        for (int i = 0; i < largeur; i++) {
+            // On prend le pixel à l'opposé sur la ligne
+            int indexSource = (j * largeur + (largeur - 1 - i)) * 3;
+            int indexDest = (j * largeur + i) * 4;
+
+            unsigned char b = donnees[indexSource];
+            unsigned char v = donnees[indexSource + 1];
+            unsigned char r = donnees[indexSource + 2];
+
+            pixels[indexDest] = b;
+            pixels[indexDest + 1] = v;
+            pixels[indexDest + 2] = r;
+            
+            if (r == 255 && v == 0 && b == 254) pixels[indexDest + 3] = 0;
+            else pixels[indexDest + 3] = 255;
+        }
+    }
+    
+    extern void ecrisImageARVB(int x, int y, int largeur, int hauteur, const int *donneesARVB);
+    ecrisImageARVB(x, y, largeur, hauteur, (const int*)pixels);
+    free(pixels);
+}
+
 void affichePersonnage(Personnage p, Camera cam) {
-    if (p.donneesImage != NULL)
-	    ecrisImageTransparente(p.playerPos.x - cam.x, p.playerPos.y, 32, 64, p.donneesImage);
+    unsigned char *sprite = p.sprites[p.frameActuelle];
+    if (sprite != NULL) {
+        if (p.regardeADroite) {
+	        ecrisImageTransparente(p.playerPos.x - cam.x, p.playerPos.y, 32, 64, sprite);
+        } else {
+            ecrisImageInversee(p.playerPos.x - cam.x, p.playerPos.y, 32, 64, sprite);
+        }
+    }
 }
 
 void affichePlateforme(Plateforme p, Camera cam) {
@@ -210,8 +280,6 @@ void affichePlateforme(Plateforme p, Camera cam) {
             for (int j=0; j<(p.hauteur/32); j++) {
                 int posX = (p.coinInferieurGauche.x + 32*i + 16) - cam.x;
                 int posY = (p.coinInferieurGauche.y + 32*j + 16);
-                
-                // On ne dessine que si c'est visible à l'écran
                 if (posX + 16 >= 0 && posX - 16 <= LargeurFenetre) {
                     ecrisImage(posX, posY, 32, 32, p.texture);
                 }
@@ -227,46 +295,23 @@ Plateforme initPlateforme(int x1, int y1, int larg, int haut, char *lienTexture)
 	p.largeur = larg;
 	p.hauteur = haut;
 	p.texture = NULL;
-			
-	DonneesImageRGB * pImagePlat;
-	pImagePlat = lisBMPRGB(lienTexture);
-    if (pImagePlat != NULL) {
-	    DonneesImageRGB imagePlat = *pImagePlat;
-	    p.texture = imagePlat.donneesRGB;
-    }
+	DonneesImageRGB * pImagePlat = lisBMPRGB(lienTexture);
+    if (pImagePlat != NULL) p.texture = pImagePlat->donneesRGB;
 	return p;
 }
 
 int checkCollision(Personnage perso, Plateforme plat) {
-	// trop à gauche
-	if (perso.playerPos.x + 8 < plat.coinInferieurGauche.x) {
-		return 0;
-	} 
-	
-	// trop à droite
-	else if (perso.playerPos.x - 8 > (plat.coinInferieurGauche.x + plat.largeur)) {
-		return 0;
-	}
-	
-	// en dessous
-	else if (perso.playerPos.y + 16 < plat.coinInferieurGauche.y) {
-		return 0;
-	}
-	
-	// trop haut (avec une marge)
-	else if (perso.playerPos.y - 18 > (plat.coinInferieurGauche.y + plat.hauteur)) {
-		return 0;
-	}
+	if (perso.playerPos.x + 8 < plat.coinInferieurGauche.x) return 0;
+	if (perso.playerPos.x - 8 > (plat.coinInferieurGauche.x + plat.largeur)) return 0;
+	if (perso.playerPos.y + 16 < plat.coinInferieurGauche.y) return 0;
+	if (perso.playerPos.y - 18 > (plat.coinInferieurGauche.y + plat.hauteur)) return 0;
 	return 1;
 }
 
 void gereCollisionPlateforme(Personnage *perso, Plateforme plat, int *vy, int *jumps) {
 	if (checkCollision(*perso, plat) == 1) {
-		// check si on saute pas
 		if ((caractereClavier() == 'z') || (caractereClavier() == 'Z')) {
-			if (*vy >= 0) {
-				return;
-			}
+			if (*vy >= 0) return;
 		}
 		*vy = 0;
 		perso->playerPos.y = plat.coinInferieurGauche.y + plat.hauteur + 17;
