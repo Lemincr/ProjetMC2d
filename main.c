@@ -44,11 +44,25 @@ typedef struct camera {
     int x;
 } Camera;
 
+typedef struct ecran {
+	Plateforme solides[20];
+} Ecran;
+
 void affichePersonnage(Personnage p, Camera cam);
 void affichePlateforme(Plateforme p, Camera cam);
 Plateforme initPlateforme(int x1, int y1, int largeur, int hauteur, char *lienTexture);
 int checkCollision(Personnage perso, Plateforme plat);
 void gereCollisionPlateforme(Personnage *perso, Plateforme plat, int *vy, int *jumps);
+
+void afficheEcran(Ecran e, Camera cam);
+void gereCollisionEcran(Personnage *perso, Ecran e, int *vy, int *jumps);
+
+Plateforme initPlateformeVide();
+
+
+// LES ECRANS (ajouter une fonction pour chaque ecran)
+Ecran initEcran1();
+
 
 int main(int argc, char **argv)
 {
@@ -88,7 +102,7 @@ void gestionEvenement(EvenementGfx evenement)
     static EtatJeu etat = ETAT_MENU;
 
 	static Personnage Player;
-	static Plateforme p1;
+	static Ecran e1;
     static unsigned char *textureFondMenu = NULL;
     static Camera cam = {0};
 	
@@ -115,7 +129,7 @@ void gestionEvenement(EvenementGfx evenement)
                 else Player.sprites[i] = NULL;
             }
 			
-			p1 = initPlateforme(16, 16, 100*COTE_PLATEFORME, 2*COTE_PLATEFORME, "images/grass.bmp");
+			e1 = initEcran1();
 			
             DonneesImageRGB *pImageFond = lisBMPRGB("images/dirt.bmp");
             if (pImageFond != NULL)
@@ -128,7 +142,7 @@ void gestionEvenement(EvenementGfx evenement)
             if (etat == ETAT_JEU) {
                 // GRAVITE
                 vyPerso -= 1;
-                gereCollisionPlateforme(&Player, p1, &vyPerso, &jumps);
+                gereCollisionEcran(&Player, e1, &vyPerso, &jumps);
                 Player.playerPos.y += vyPerso;
 
                 // Animation
@@ -157,7 +171,7 @@ void gestionEvenement(EvenementGfx evenement)
             if (etat == ETAT_MENU) {
                 afficheMenu(largeurFenetre(), hauteurFenetre(), textureFondMenu);
             } else {
-                affichePlateforme(p1, cam);
+                afficheEcran(e1, cam);
                 affichePersonnage(Player, cam);
             }
 			break;
@@ -317,4 +331,36 @@ void gereCollisionPlateforme(Personnage *perso, Plateforme plat, int *vy, int *j
 		perso->playerPos.y = plat.coinInferieurGauche.y + plat.hauteur + 17;
 		*jumps = 1;
 	}
+}
+
+void afficheEcran(Ecran e, Camera cam) {
+	for (int i=0; i<20; i++) {
+		affichePlateforme(e.solides[i], cam);
+	}
+}
+
+void gereCollisionEcran(Personnage *perso, Ecran e, int *vy, int *jumps) {
+	for (int i=0; i<20; i++) {
+		gereCollisionPlateforme(perso, e.solides[i], vy, jumps);
+	}
+}
+
+Plateforme initPlateformeVide() {
+	Plateforme p;
+	p.coinInferieurGauche.x = 0;
+	p.coinInferieurGauche.y = 0;
+	p.largeur = 0;
+	p.hauteur = 0;
+	p.texture = NULL;
+	return p;
+}
+
+Ecran initEcran1() {
+	Ecran e;
+	e.solides[0] = initPlateforme(0, 0, 25*COTE_PLATEFORME, 2*COTE_PLATEFORME, "images/dirt.bmp");
+	e.solides[1] = initPlateforme(0, 2*COTE_PLATEFORME, 25*COTE_PLATEFORME, 1*COTE_PLATEFORME, "images/grass.bmp");
+	for (int i=2; i<20; i++) {
+		e.solides[i] = initPlateformeVide();
+	}
+	return e;
 }
