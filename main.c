@@ -35,8 +35,12 @@ typedef struct plateforme {
 	unsigned char *texture;
 } Plateforme;
 
-void affichePersonnage(Personnage p);
-void affichePlateforme(Plateforme p);
+typedef struct camera {
+    int x;
+} Camera;
+
+void affichePersonnage(Personnage p, Camera cam);
+void affichePlateforme(Plateforme p, Camera cam);
 Plateforme initPlateforme(int x1, int y1, int largeur, int hauteur, char *lienTexture);
 int checkCollision(Personnage perso, Plateforme plat);
 void gereCollisionPlateforme(Personnage *perso, Plateforme plat, int *vy, int *jumps);
@@ -78,14 +82,10 @@ void gestionEvenement(EvenementGfx evenement)
 	static bool pleinEcran = false; 
     static EtatJeu etat = ETAT_MENU;
 
-	static int xBalle;
-	static int yBalle;
-	static int vxBalle = 7;
-	static int vyBalle = -7;
-	
 	static Personnage Player;
 	static Plateforme p1;
     static unsigned char *textureFondMenu = NULL;
+    static Camera cam = {0};
 	
 	static int vyPerso = 0;
 	static int jumps = 0;
@@ -111,16 +111,15 @@ void gestionEvenement(EvenementGfx evenement)
 		
 		case Temporisation:
             if (etat == ETAT_JEU) {
-                // On met a jour les coordonnees de la balle
-                xBalle += vxBalle;
-                yBalle += vyBalle;
-                
                 // GRAVITE
                 vyPerso -= 1;
-                
                 gereCollisionPlateforme(&Player, p1, &vyPerso, &jumps);
-                
                 Player.playerPos.y += vyPerso;
+
+                // Mise à jour de la caméra pour suivre Steve
+                // Steve reste au centre si possible (x - Largeur/2)
+                cam.x = Player.playerPos.x - LargeurFenetre / 2;
+                if (cam.x < 0) cam.x = 0; // On ne scrolle pas avant le début du niveau
             }
 			rafraichisFenetre();
 			break;
@@ -130,10 +129,9 @@ void gestionEvenement(EvenementGfx evenement)
             if (etat == ETAT_MENU) {
                 afficheMenu(largeurFenetre(), hauteurFenetre(), textureFondMenu);
             } else {
-                rectangle(0, 0, largeurFenetre(), hauteurFenetre());
-                couleurCourante(0, 0, 0);
-                affichePersonnage(Player);
-                affichePlateforme(p1);
+                // On dessine le fond ciel ou autre si besoin, ici blanc par défaut
+                affichePlateforme(p1, cam);
+                affichePersonnage(Player, cam);
             }
 			break;
 			
@@ -186,9 +184,6 @@ void gestionEvenement(EvenementGfx evenement)
                     } else if (estSurBouton(abscisseSouris(), ordonneeSouris(), bQuitter)) {
                         termineBoucleEvenements();
                     }
-                } else {
-                    xBalle = abscisseSouris();
-                    yBalle = ordonneeSouris();
                 }
 			}
 			break;
@@ -204,16 +199,22 @@ void gestionEvenement(EvenementGfx evenement)
 	}
 }
 
-void affichePersonnage(Personnage p) {
+void affichePersonnage(Personnage p, Camera cam) {
     if (p.donneesImage != NULL)
-	    ecrisImageTransparente(p.playerPos.x, p.playerPos.y, 32, 64, p.donneesImage);
+	    ecrisImageTransparente(p.playerPos.x - cam.x, p.playerPos.y, 32, 64, p.donneesImage);
 }
 
-void affichePlateforme(Plateforme p) {
+void affichePlateforme(Plateforme p, Camera cam) {
     if (p.texture != NULL) {
         for (int i=0; i<(p.largeur/32); i++) {
             for (int j=0; j<(p.hauteur/32); j++) {
-                ecrisImage((p.coinInferieurGauche.x + 32*i + 16), (p.coinInferieurGauche.y + 32*j + 16), 32, 32, p.texture);
+                int posX = (p.coinInferieurGauche.x + 32*i + 16) - cam.x;
+                int posY = (p.coinInferieurGauche.y + 32*j + 16);
+                
+                // On ne dessine que si c'est visible à l'écran
+                if (posX + 16 >= 0 && posX - 16 <= LargeurFenetre) {
+                    ecrisImage(posX, posY, 32, 32, p.texture);
+                }
             }
         }	
     }
