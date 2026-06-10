@@ -13,6 +13,7 @@
 #define COTE_PLATEFORME 32
 #define NB_SPRITES_MARCHE 5
 #define NB_SPRITES_SQUELETTE 4
+#define MAX_PLATEFORMES 20
 
 // Fonction de trace de cercle
 void cercle(float centreX, float centreY, float rayon);
@@ -66,6 +67,10 @@ typedef struct background {
     int hauteur;
 } Background;
 
+typedef struct ecran {
+	Plateforme solides[MAX_PLATEFORMES];
+} Ecran;
+
 void affichePersonnage(Personnage p, Camera cam);
 void afficheSquelette(Squelette s, Camera cam);
 void affichePlateforme(Plateforme p, Camera cam);
@@ -74,6 +79,15 @@ Plateforme initPlateforme(int x1, int y1, int largeur, int hauteur, char *lienTe
 int checkCollision(Personnage perso, Plateforme plat);
 void gereCollisionPlateforme(Personnage *perso, Plateforme plat, int *vy, int *jumps);
 void ecrisImageInversee(int x, int y, int largeur, int hauteur, const unsigned char *donnees);
+
+void afficheEcran(Ecran e, Camera cam);
+void gereCollisionEcran(Personnage *perso, Ecran e, int *vy, int *jumps);
+Plateforme initPlateformeVide();
+
+
+// ECRANS (ajouter à chaque écran)
+Ecran initEcran1();
+
 
 int main(int argc, char **argv)
 {
@@ -102,7 +116,7 @@ void gestionEvenement(EvenementGfx evenement)
     static EtatJeu etat = ETAT_MENU;
 
 	static Personnage Player;
-	static Plateforme p1;
+	static Ecran nv1;
     static unsigned char *textureFondMenu = NULL;
     static Camera cam = {0};
     static Background bgJeu = {NULL, 0, 0};
@@ -151,7 +165,7 @@ void gestionEvenement(EvenementGfx evenement)
                 }
             }
 			
-			p1 = initPlateforme(16, 16, 300*COTE_PLATEFORME, 2*COTE_PLATEFORME, "images/grass.bmp");
+			nv1 = initEcran1();
 			
             DonneesImageRGB *pImageFondMenu = lisBMPRGB("images/background.bmp");
             if (pImageFondMenu != NULL) textureFondMenu = pImageFondMenu->donneesRGB;
@@ -190,7 +204,7 @@ void gestionEvenement(EvenementGfx evenement)
 
                 // GRAVITE
                 vyPerso -= 1;
-                gereCollisionPlateforme(&Player, p1, &vyPerso, &jumps);
+                gereCollisionEcran(&Player, nv1, &vyPerso, &jumps);
                 Player.playerPos.y += vyPerso;
 
                 // GameOver : chute dans le vide
@@ -243,7 +257,7 @@ void gestionEvenement(EvenementGfx evenement)
                 afficheMenu(LargeurFenetre, HauteurFenetre, textureFondMenu, bJouerMenu, bQuitterMenu);
             } else {
                 afficheBackground(bgJeu, cam);
-                affichePlateforme(p1, cam);
+                afficheEcran(nv1, cam);
                 afficheSquelette(mob1, cam);
                 affichePersonnage(Player, cam);
                 afficheChaine(chrono, 24, 30, 550);
@@ -365,3 +379,41 @@ void gereCollisionPlateforme(Personnage *perso, Plateforme plat, int *vy, int *j
 		*vy = 0; perso->playerPos.y = plat.coinInferieurGauche.y + plat.hauteur + perso->hauteurs[0]/4 + 1; *jumps = 1;
 	}
 }
+
+void afficheEcran(Ecran e, Camera cam) {
+	for (int i=0; i<MAX_PLATEFORMES; i++) {
+		affichePlateforme(e.solides[i], cam);
+	}
+}
+
+void gereCollisionEcran(Personnage *perso, Ecran e, int *vy, int *jumps) {
+	for (int i=0; i<MAX_PLATEFORMES; i++) {
+		gereCollisionPlateforme(perso, e.solides[i], vy, jumps);
+	}
+}
+
+Plateforme initPlateformeVide() {
+	Plateforme p;
+	p.coinInferieurGauche.x = 0;
+	p.coinInferieurGauche.y = 0;
+	p.largeur = 0;
+	p.hauteur = 0;
+	p.texture = NULL;
+	return p;
+}
+
+// définis les niveaux ici
+Ecran initEcran1() {
+	Ecran e;
+	e.solides[0] = initPlateforme(0, 0, 300*COTE_PLATEFORME, 2*COTE_PLATEFORME, "images/dirt.bmp");
+	e.solides[1] = initPlateforme(0, 2*COTE_PLATEFORME, 300*COTE_PLATEFORME, 1*COTE_PLATEFORME, "images/grass.bmp");
+	
+	
+	// le reste qui est vide
+	for (int i=2; i<MAX_PLATEFORMES; i++) {
+		e.solides[i] = initPlateformeVide();
+	}
+	return e;
+}
+
+
