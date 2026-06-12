@@ -5,6 +5,8 @@
 #include "BmpLib.h" // Cet include permet de manipuler des fichiers BMP
 #include "ESLib.h" // Pour utiliser valeurAleatoire()
 #include "menu.h" // Pour le menu principal
+#include "platforme.h"
+
 
 // Largeur et hauteur par defaut d'une image correspondant a nos criteres
 #define LargeurFenetre 800
@@ -13,7 +15,10 @@
 #define COTE_PLATEFORME 32
 #define NB_SPRITES_MARCHE 5
 #define NB_SPRITES_SQUELETTE 4
-#define MAX_PLATEFORMES 20
+#define MAX_PLATEFORMES 2000
+
+#define HAUTEUR_MAP 18
+#define LARGEUR_MAP 50000
 
 // Fonction de trace de cercle
 void cercle(float centreX, float centreY, float rayon);
@@ -21,10 +26,7 @@ void cercle(float centreX, float centreY, float rayon);
 des qu'une evenement survient */
 void gestionEvenement(EvenementGfx evenement);
 
-typedef struct coordonnees {
-	int x;
-	int y;
-} Coord;
+
 
 typedef struct personnage {
 	Coord playerPos;
@@ -50,15 +52,11 @@ typedef struct squelette {
     int origineX;
 } Squelette;
 
-typedef struct plateforme {
-	Coord coinInferieurGauche;
-	int largeur;
-	int hauteur;
-	unsigned char *texture;
-} Plateforme;
+
 
 typedef struct camera {
     int x;
+int y;
 } Camera;
 
 typedef struct background {
@@ -67,22 +65,20 @@ typedef struct background {
     int hauteur;
 } Background;
 
-typedef struct ecran {
-	Plateforme solides[MAX_PLATEFORMES];
-} Ecran;
+
 
 void affichePersonnage(Personnage p, Camera cam);
 void afficheSquelette(Squelette s, Camera cam);
 void affichePlateforme(Plateforme p, Camera cam);
 void afficheBackground(Background bg, Camera cam);
-Plateforme initPlateforme(int x1, int y1, int largeur, int hauteur, char *lienTexture);
+
 int checkCollision(Personnage perso, Plateforme plat);
 void gereCollisionPlateforme(Personnage *perso, Plateforme plat, int *vy, int *jumps);
 void ecrisImageInversee(int x, int y, int largeur, int hauteur, const unsigned char *donnees);
 
 void afficheEcran(Ecran e, Camera cam);
 void gereCollisionEcran(Personnage *perso, Ecran e, int *vy, int *jumps);
-Plateforme initPlateformeVide();
+
 
 
 // ECRANS (ajouter à chaque écran)
@@ -350,7 +346,8 @@ void affichePlateforme(Plateforme p, Camera cam) {
     if (p.texture != NULL) {
         for (int i=0; i<(p.largeur/32); i++) {
             for (int j=0; j<(p.hauteur/32); j++) {
-                int posX = (p.coinInferieurGauche.x + 32*i + 16) - cam.x, posY = (p.coinInferieurGauche.y + 32*j + 16);
+                int posX = (p.coinInferieurGauche.x + 32*i + 16) - cam.x;
+                int posY = (p.coinInferieurGauche.y + 32*j + 16) - cam.y; // <-- On a ajouté "- cam.y" ici
                 if (posX + 16 >= 0 && posX - 16 <= LargeurFenetre) ecrisImage(posX, posY, 32, 32, p.texture);
             }
         }	
@@ -403,17 +400,4 @@ Plateforme initPlateformeVide() {
 }
 
 // définis les niveaux ici
-Ecran initEcran1() {
-	Ecran e;
-	e.solides[0] = initPlateforme(0, 0, 300*COTE_PLATEFORME, 2*COTE_PLATEFORME, "images/dirt.bmp");
-	e.solides[1] = initPlateforme(0, 2*COTE_PLATEFORME, 300*COTE_PLATEFORME, 1*COTE_PLATEFORME, "images/grass.bmp");
-	
-	
-	// le reste qui est vide
-	for (int i=2; i<MAX_PLATEFORMES; i++) {
-		e.solides[i] = initPlateformeVide();
-	}
-	return e;
-}
-
 
