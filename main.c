@@ -5,6 +5,8 @@
 #include "BmpLib.h" // Cet include permet de manipuler des fichiers BMP
 #include "ESLib.h" // Pour utiliser valeurAleatoire()
 #include "menu.h" // Pour le menu principal
+#include "platforme.h"
+
 
 // Largeur et hauteur par defaut d'une image correspondant a nos criteres
 #define LargeurFenetre 800
@@ -13,6 +15,8 @@
 #define COTE_PLATEFORME 32
 #define NB_SPRITES_MARCHE 5
 #define NB_SPRITES_SQUELETTE 4
+#define MAX_PLATEFORMES 2000
+#define MAX_DECORATIONS 100
 
 // Fonction de trace de cercle
 void cercle(float centreX, float centreY, float rayon);
@@ -20,10 +24,7 @@ void cercle(float centreX, float centreY, float rayon);
 des qu'une evenement survient */
 void gestionEvenement(EvenementGfx evenement);
 
-typedef struct coordonnees {
-	int x;
-	int y;
-} Coord;
+
 
 typedef struct personnage {
 	Coord playerPos;
@@ -49,15 +50,11 @@ typedef struct squelette {
     int origineX;
 } Squelette;
 
-typedef struct plateforme {
-	Coord coinInferieurGauche;
-	int largeur;
-	int hauteur;
-	unsigned char *texture;
-} Plateforme;
+
 
 typedef struct camera {
     int x;
+int y;
 } Camera;
 
 typedef struct background {
@@ -66,14 +63,33 @@ typedef struct background {
     int hauteur;
 } Background;
 
+
+
+
+
 void affichePersonnage(Personnage p, Camera cam);
 void afficheSquelette(Squelette s, Camera cam);
 void affichePlateforme(Plateforme p, Camera cam);
+void afficheDecoration(Decoration d, Camera cam);
 void afficheBackground(Background bg, Camera cam);
-Plateforme initPlateforme(int x1, int y1, int largeur, int hauteur, char *lienTexture);
+
 int checkCollision(Personnage perso, Plateforme plat);
 void gereCollisionPlateforme(Personnage *perso, Plateforme plat, int *vy, int *jumps);
 void ecrisImageInversee(int x, int y, int largeur, int hauteur, const unsigned char *donnees);
+
+void afficheEcran(Ecran e, Camera cam);
+void gereCollisionEcran(Personnage *perso, Ecran e, int *vy, int *jumps);
+
+
+int checkCollisionEcran(Personnage perso, Ecran e);
+
+Decoration initDecoration(int x1, int y1, int largeur, int hauteur, char *lienTexture);
+Decoration initDecorationVide();
+
+
+// ECRANS (ajouter à chaque écran)
+Ecran initEcran1();
+
 
 int main(int argc, char **argv)
 {
@@ -102,7 +118,7 @@ void gestionEvenement(EvenementGfx evenement)
     static EtatJeu etat = ETAT_MENU;
 
 	static Personnage Player;
-	static Plateforme p1;
+	static Ecran nv1;
     static unsigned char *textureFondMenu = NULL;
     static Camera cam = {0};
     static Background bgJeu = {NULL, 0, 0};
@@ -151,7 +167,7 @@ void gestionEvenement(EvenementGfx evenement)
                 }
             }
 			
-			p1 = initPlateforme(16, 16, 300*COTE_PLATEFORME, 2*COTE_PLATEFORME, "images/grass.bmp");
+			nv1 = initEcran1();
 			
             DonneesImageRGB *pImageFondMenu = lisBMPRGB("images/background.bmp");
             if (pImageFondMenu != NULL) textureFondMenu = pImageFondMenu->donneesRGB;
@@ -185,12 +201,23 @@ void gestionEvenement(EvenementGfx evenement)
 		
 		case Temporisation:
             if (etat == ETAT_JEU) {
+            
+            	// collision des murs
+                Personnage PlayerColCheck = Player;
+                PlayerColCheck.playerPos.x = Player.playerPos.x + Player.vx;
+                
+                // marge de sécurité
+                PlayerColCheck.playerPos.y = Player.playerPos.y + 10;
+                if (checkCollisionEcran(PlayerColCheck, nv1) == 1) {
+                	Player.vx = 0;
+                }
+                
                 // Mouvement horizontal continu (vitesse réduite de 10 à 6)
                 Player.playerPos.x += Player.vx;
 
                 // GRAVITE
                 vyPerso -= 1;
-                gereCollisionPlateforme(&Player, p1, &vyPerso, &jumps);
+                gereCollisionEcran(&Player, nv1, &vyPerso, &jumps);
                 Player.playerPos.y += vyPerso;
 
                 // GameOver : chute dans le vide
@@ -243,7 +270,7 @@ void gestionEvenement(EvenementGfx evenement)
                 afficheMenu(LargeurFenetre, HauteurFenetre, textureFondMenu, bJouerMenu, bQuitterMenu);
             } else {
                 afficheBackground(bgJeu, cam);
-                affichePlateforme(p1, cam);
+                afficheEcran(nv1, cam);
                 afficheSquelette(mob1, cam);
                 affichePersonnage(Player, cam);
                 afficheChaine(chrono, 24, 30, 550);
@@ -336,7 +363,8 @@ void affichePlateforme(Plateforme p, Camera cam) {
     if (p.texture != NULL) {
         for (int i=0; i<(p.largeur/32); i++) {
             for (int j=0; j<(p.hauteur/32); j++) {
-                int posX = (p.coinInferieurGauche.x + 32*i + 16) - cam.x, posY = (p.coinInferieurGauche.y + 32*j + 16);
+                int posX = (p.coinInferieurGauche.x + 32*i + 16) - cam.x;
+                int posY = (p.coinInferieurGauche.y + 32*j + 16) - cam.y; // <-- On a ajouté "- cam.y" ici
                 if (posX + 16 >= 0 && posX - 16 <= LargeurFenetre) ecrisImage(posX, posY, 32, 32, p.texture);
             }
         }	
@@ -364,4 +392,67 @@ void gereCollisionPlateforme(Personnage *perso, Plateforme plat, int *vy, int *j
 		if ((caractereClavier() == 'z') || (caractereClavier() == 'Z')) { if (*vy >= 0) return; }
 		*vy = 0; perso->playerPos.y = plat.coinInferieurGauche.y + plat.hauteur + perso->hauteurs[0]/4 + 1; *jumps = 1;
 	}
+}
+
+void afficheEcran(Ecran e, Camera cam) {
+	for (int i=0; i<MAX_PLATEFORMES; i++) {
+		affichePlateforme(e.solides[i], cam);
+	}
+    for (int i=0; i<MAX_DECORATIONS; i++) {
+        afficheDecoration(e.non_solides[i], cam);
+    }
+}
+
+void gereCollisionEcran(Personnage *perso, Ecran e, int *vy, int *jumps) {
+	for (int i=0; i<MAX_PLATEFORMES; i++) {
+		gereCollisionPlateforme(perso, e.solides[i], vy, jumps);
+	}
+}
+
+Plateforme initPlateformeVide() {
+	Plateforme p;
+	p.coinInferieurGauche.x = 0;
+	p.coinInferieurGauche.y = 0;
+	p.largeur = 0;
+	p.hauteur = 0;
+	p.texture = NULL;
+	return p;
+}
+
+int checkCollisionEcran(Personnage perso, Ecran e) {
+	for (int i=0; i<MAX_PLATEFORMES; i++) {
+		if (checkCollision(perso, e.solides[i]) == 1) {
+			return 1;
+		}
+	}
+	return 0;
+}
+
+void afficheDecoration(Decoration d, Camera cam) {
+	if (d.texture != NULL) {
+        for (int i=0; i<(d.largeur/32); i++) {
+            for (int j=0; j<(d.hauteur/32); j++) {
+                int posX = (d.coinInferieurGauche.x + 32*i + 16) - cam.x;
+                int posY = (d.coinInferieurGauche.y + 32*j + 16) - cam.y; // <-- On a ajouté "- cam.y" ici
+                if (posX + 16 >= 0 && posX - 16 <= LargeurFenetre) ecrisImage(posX, posY, 32, 32, d.texture);
+            }
+        }	
+    }
+}
+
+Decoration initDecoration(int x1, int y1, int larg, int haut, char *lienTexture) {
+    Decoration d; d.coinInferieurGauche.x = x1; d.coinInferieurGauche.y = y1; d.largeur = larg; d.hauteur = haut; d.texture = NULL;
+    DonneesImageRGB * img = lisBMPRGB(lienTexture);
+    if (img != NULL) d.texture = img->donneesRGB;
+    return d;
+}
+
+Decoration initDecorationVide() {
+    Decoration d;
+    d.coinInferieurGauche.x = 0;
+    d.coinInferieurGauche.y = 0;
+    d.largeur = 0;
+    d.hauteur = 0;
+    d.texture = NULL;
+    return d;
 }
