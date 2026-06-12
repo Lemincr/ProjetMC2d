@@ -12,6 +12,7 @@
 #define NB_SPRITES_MARCHE 5
 #define NB_SPRITES_SQUELETTE 4
 #define MAX_PLATEFORMES 2000
+#define MAX_DECORATIONS 100
 
 #define HAUTEUR_MAP 19
 #define LARGEUR_MAP 100000
@@ -27,11 +28,21 @@ typedef struct plateforme {
 	unsigned char *texture;
 } Plateforme;
 
+typedef struct decoration {
+	Coord coinInferieurGauche;
+	int largeur;
+	int hauteur;
+	unsigned char *texture;
+} Decoration;
+
 
 typedef struct ecran {
 	Plateforme solides[MAX_PLATEFORMES];
+	Decoration non_solides[MAX_DECORATIONS];
 } Ecran;
 Ecran initEcran1();
-Plateforme initPlateforme(int x1, int y1, int largeur, int hauteur, char *lienTexture);
+Plateforme initPlateforme(int x1, int y1, int larg, int haut, char *lienTexture);
 Plateforme initPlateformeVide();
+Decoration initDecoration(int x1, int y1, int largeur, int hauteur, char *lienTexture);
+Decoration initDecorationVide();
 

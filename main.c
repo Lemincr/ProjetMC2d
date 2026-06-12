@@ -16,6 +16,7 @@
 #define NB_SPRITES_MARCHE 5
 #define NB_SPRITES_SQUELETTE 4
 #define MAX_PLATEFORMES 2000
+#define MAX_DECORATIONS 100
 
 // Fonction de trace de cercle
 void cercle(float centreX, float centreY, float rayon);
@@ -64,9 +65,12 @@ typedef struct background {
 
 
 
+
+
 void affichePersonnage(Personnage p, Camera cam);
 void afficheSquelette(Squelette s, Camera cam);
 void affichePlateforme(Plateforme p, Camera cam);
+void afficheDecoration(Decoration d, Camera cam);
 void afficheBackground(Background bg, Camera cam);
 
 int checkCollision(Personnage perso, Plateforme plat);
@@ -78,6 +82,9 @@ void gereCollisionEcran(Personnage *perso, Ecran e, int *vy, int *jumps);
 
 
 int checkCollisionEcran(Personnage perso, Ecran e);
+
+Decoration initDecoration(int x1, int y1, int largeur, int hauteur, char *lienTexture);
+Decoration initDecorationVide();
 
 
 // ECRANS (ajouter à chaque écran)
@@ -391,6 +398,9 @@ void afficheEcran(Ecran e, Camera cam) {
 	for (int i=0; i<MAX_PLATEFORMES; i++) {
 		affichePlateforme(e.solides[i], cam);
 	}
+    for (int i=0; i<MAX_DECORATIONS; i++) {
+        afficheDecoration(e.non_solides[i], cam);
+    }
 }
 
 void gereCollisionEcran(Personnage *perso, Ecran e, int *vy, int *jumps) {
@@ -418,3 +428,31 @@ int checkCollisionEcran(Personnage perso, Ecran e) {
 	return 0;
 }
 
+void afficheDecoration(Decoration d, Camera cam) {
+	if (d.texture != NULL) {
+        for (int i=0; i<(d.largeur/32); i++) {
+            for (int j=0; j<(d.hauteur/32); j++) {
+                int posX = (d.coinInferieurGauche.x + 32*i + 16) - cam.x;
+                int posY = (d.coinInferieurGauche.y + 32*j + 16) - cam.y; // <-- On a ajouté "- cam.y" ici
+                if (posX + 16 >= 0 && posX - 16 <= LargeurFenetre) ecrisImage(posX, posY, 32, 32, d.texture);
+            }
+        }	
+    }
+}
+
+Decoration initDecoration(int x1, int y1, int larg, int haut, char *lienTexture) {
+    Decoration d; d.coinInferieurGauche.x = x1; d.coinInferieurGauche.y = y1; d.largeur = larg; d.hauteur = haut; d.texture = NULL;
+    DonneesImageRGB * img = lisBMPRGB(lienTexture);
+    if (img != NULL) d.texture = img->donneesRGB;
+    return d;
+}
+
+Decoration initDecorationVide() {
+    Decoration d;
+    d.coinInferieurGauche.x = 0;
+    d.coinInferieurGauche.y = 0;
+    d.largeur = 0;
+    d.hauteur = 0;
+    d.texture = NULL;
+    return d;
+}
