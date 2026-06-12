@@ -84,3 +84,15 @@ Ecran initEcran1() {
 }
 
 
+Piece initPiece(int x1, int y1, char *lienTexture) {
+	Piece p;
+	p.pos.x = x1;
+	p.pos.y = y1;
+	DonneesImageRGB * img = lisBMPRGB(lienTexture);
+    if (img != NULL) p.image = img->donneesRGB;
+    return p;
+}
+
+
+void affichePiece(Piece p, Camera cam);
+

@@ -35,6 +35,11 @@ typedef struct decoration {
 	unsigned char *texture;
 } Decoration;
 
+typedef struct piece {
+	Coord pos;
+	unsigned char *image;
+} Piece;
+
 
 typedef struct ecran {
 	Plateforme solides[MAX_PLATEFORMES];
@@ -46,3 +51,5 @@ Plateforme initPlateformeVide();
 Decoration initDecoration(int x1, int y1, int largeur, int hauteur, char *lienTexture);
 Decoration initDecorationVide();
 
+Piece initPiece(int x1, int y1, char *lienTexture);
+void affichePiece(Piece p, Camera cam);
