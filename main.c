@@ -17,9 +17,6 @@
 #define NB_SPRITES_SQUELETTE 4
 #define MAX_PLATEFORMES 2000
 
-#define HAUTEUR_MAP 18
-#define LARGEUR_MAP 50000
-
 // Fonction de trace de cercle
 void cercle(float centreX, float centreY, float rayon);
 /* La fonction de gestion des evenements, appelee automatiquement par le systeme
@@ -79,6 +76,8 @@ void ecrisImageInversee(int x, int y, int largeur, int hauteur, const unsigned c
 void afficheEcran(Ecran e, Camera cam);
 void gereCollisionEcran(Personnage *perso, Ecran e, int *vy, int *jumps);
 
+
+int checkCollisionEcran(Personnage perso, Ecran e);
 
 
 // ECRANS (ajouter à chaque écran)
@@ -195,6 +194,17 @@ void gestionEvenement(EvenementGfx evenement)
 		
 		case Temporisation:
             if (etat == ETAT_JEU) {
+            
+            	// collision des murs
+                Personnage PlayerColCheck = Player;
+                PlayerColCheck.playerPos.x = Player.playerPos.x + Player.vx;
+                
+                // marge de sécurité
+                PlayerColCheck.playerPos.y = Player.playerPos.y + 10;
+                if (checkCollisionEcran(PlayerColCheck, nv1) == 1) {
+                	Player.vx = 0;
+                }
+                
                 // Mouvement horizontal continu (vitesse réduite de 10 à 6)
                 Player.playerPos.x += Player.vx;
 
@@ -399,5 +409,12 @@ Plateforme initPlateformeVide() {
 	return p;
 }
 
-// définis les niveaux ici
+int checkCollisionEcran(Personnage perso, Ecran e) {
+	for (int i=0; i<MAX_PLATEFORMES; i++) {
+		if (checkCollision(perso, e.solides[i]) == 1) {
+			return 1;
+		}
+	}
+	return 0;
+}
 
