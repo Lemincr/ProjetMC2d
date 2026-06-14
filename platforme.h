@@ -4,6 +4,7 @@
 #include "GfxLib.h" // Seul cet include est necessaire pour faire du graphique
 #include "BmpLib.h" // Cet include permet de manipuler des fichiers BMP
 #include "ESLib.h" // Pour utiliser valeurAleatoire()
+#include <string.h>
 
 #define LargeurFenetre 800
 #define HauteurFenetre 600
@@ -13,13 +14,21 @@
 #define NB_SPRITES_SQUELETTE 4
 #define MAX_PLATEFORMES 2000
 #define MAX_DECORATIONS 100
+#define MAX_EMERAUDES 100
 
 #define HAUTEUR_MAP 19
 #define LARGEUR_MAP 100000
+
+
 typedef struct coordonnees {
 	int x;
 	int y;
 } Coord;
+
+typedef struct camera {
+    int x;
+	int y;
+} Camera;
 
 typedef struct plateforme {
 	Coord coinInferieurGauche;
@@ -44,6 +53,7 @@ typedef struct piece {
 typedef struct ecran {
 	Plateforme solides[MAX_PLATEFORMES];
 	Decoration non_solides[MAX_DECORATIONS];
+	Piece emeraudes[MAX_EMERAUDES];
 } Ecran;
 Ecran initEcran1();
 Plateforme initPlateforme(int x1, int y1, int larg, int haut, char *lienTexture);
@@ -53,3 +63,5 @@ Decoration initDecorationVide();
 
 Piece initPiece(int x1, int y1, char *lienTexture);
 void affichePiece(Piece p, Camera cam);
+Piece initPieceVide();
+void ecrisImageInversee(int x, int y, int largeur, int hauteur, const unsigned char *donnees);
