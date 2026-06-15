@@ -34,7 +34,7 @@
 
 #define NB_SPRITES_MARCHE 5
 
-#define NB_SPRITES_SQUELETTE 4
+#define NB_SPRITES_ZOMBIE 3
 
 #define MAX_PLATEFORMES 2000
 
@@ -80,15 +80,15 @@ unsigned char *sprites[NB_SPRITES_MARCHE];
 
 
 
-typedef struct squelette {
+typedef struct zombie {
 
     Coord pos;
 
-    unsigned char *sprites[NB_SPRITES_SQUELETTE];
+    unsigned char *sprites[NB_SPRITES_ZOMBIE];
 
-    int largeurs[NB_SPRITES_SQUELETTE];
+    int largeurs[NB_SPRITES_ZOMBIE];
 
-    int hauteurs[NB_SPRITES_SQUELETTE];
+    int hauteurs[NB_SPRITES_ZOMBIE];
 
     int frameActuelle;
 
@@ -102,7 +102,7 @@ typedef struct squelette {
 
     int origineX;
 
-} Squelette;
+} Zombie;
 
 
 
@@ -136,7 +136,7 @@ typedef struct background {
 
 void affichePersonnage(Personnage p, Camera cam);
 
-void afficheSquelette(Squelette s, Camera cam);
+void afficheZombie(Zombie z, Camera cam);
 
 void affichePlateforme(Plateforme p, Camera cam);
 
@@ -244,7 +244,7 @@ static Ecran nv1;
 
     static Background bgJeu = {NULL, 0, 0};
 
-    static Squelette mob1;
+    static Zombie mob1;
 
     static BoutonImg bJouerMenu, bQuitterMenu;
 
@@ -291,9 +291,9 @@ switch (evenement)
 
             mob1.pos.x = 600; mob1.pos.y = 100; mob1.origineX = 600; mob1.range = 200; mob1.vx = 2;
             mob1.frameActuelle = 0; mob1.timerAnim = 0; mob1.regardeADroite = false;
-            for (int i = 0; i < NB_SPRITES_SQUELETTE; i++) {
-                if (i == 0) sprintf(chemin, "images/squelette.bmp");
-                else sprintf(chemin, "images/squelette%d.bmp", i + 1);
+            for (int i = 0; i < NB_SPRITES_ZOMBIE; i++) {
+                if (i == 0) sprintf(chemin, "images/zombie.bmp");
+                else sprintf(chemin, "images/zombie%d.bmp", i + 1);
                 DonneesImageRGB *img = lisBMPRGB(chemin);
                 if (img != NULL) {
                     mob1.sprites[i] = img->donneesRGB;
@@ -385,7 +385,7 @@ switch (evenement)
                 else if (mob1.pos.x < mob1.origineX - mob1.range) { mob1.vx = 2; mob1.regardeADroite = false; }
                 mob1.timerAnim++;
                 if (mob1.timerAnim >= 5) {
-                    mob1.frameActuelle = (mob1.frameActuelle + 1) % NB_SPRITES_SQUELETTE;
+                    mob1.frameActuelle = (mob1.frameActuelle + 1) % NB_SPRITES_ZOMBIE;
                     mob1.timerAnim = 0;
                 }
 
@@ -444,7 +444,7 @@ switch (evenement)
             else {
                 afficheBackground(bgJeu, cam);
                 afficheEcran(nv1, cam);
-                afficheSquelette(mob1, cam);
+                afficheZombie(mob1, cam);
                 affichePersonnage(Player, cam);
                 
                 afficheChaine(chrono, 24, 30, 550);
@@ -570,17 +570,17 @@ void affichePersonnage(Personnage p, Camera cam) {
 
 
 
-void afficheSquelette(Squelette s, Camera cam) {
+void afficheZombie(Zombie z, Camera cam) {
 
-    unsigned char *sprite = s.sprites[s.frameActuelle];
+    unsigned char *sprite = z.sprites[z.frameActuelle];
 
-    int l = s.largeurs[s.frameActuelle], h = s.hauteurs[s.frameActuelle];
+    int l = z.largeurs[z.frameActuelle], h = z.hauteurs[z.frameActuelle];
 
     if (sprite != NULL) {
 
-        if (s.regardeADroite) ecrisImageInversee(s.pos.x - cam.x, s.pos.y, l, h, sprite);
+        if (z.regardeADroite) ecrisImageInversee(z.pos.x - cam.x, z.pos.y, l, h, sprite);
 
-        else ecrisImageTransparente(s.pos.x - cam.x, s.pos.y, l, h, sprite);
+        else ecrisImageTransparente(z.pos.x - cam.x, z.pos.y, l, h, sprite);
 
     }
 
