@@ -72,7 +72,8 @@ int main(int argc, char **argv) {
 void gestionEvenement(EvenementGfx evenement) {
     static EtatJeu etat = ETAT_MENU;
     static Personnage Player;
-    static Ecran nv1;
+    static Ecran nv1, nv2;
+    static int niveauActuel = 1;
     static unsigned char *textureFondMenu = NULL;
     static Camera cam = {0, 0};
     static Background bgJeu = {NULL, 0, 0};
@@ -108,6 +109,7 @@ void gestionEvenement(EvenementGfx evenement) {
             }
 
             nv1 = initEcran1();
+            nv2 = initEcran2();
             DonneesImageRGB *ifm = lisBMPRGB("images/background.bmp"); if (ifm) textureFondMenu = ifm->donneesRGB;
             DonneesImageRGB *pij = lisBMPRGB("images/jouer.bmp"); 
             if (pij) { bJouerMenu.image = pij->donneesRGB; bJouerMenu.largeur = pij->largeurImage; bJouerMenu.hauteur = pij->hauteurImage; bJouerMenu.x = LargeurFenetre/2 - pij->largeurImage/2; bJouerMenu.y = HauteurFenetre/2 - 60; }
@@ -125,18 +127,12 @@ void gestionEvenement(EvenementGfx evenement) {
                 if (keyD) Player.regardeADroite = true; else if (keyQ) Player.regardeADroite = false;
 
                 Personnage check = Player; check.playerPos.x += Player.vx; check.playerPos.y += 10;
-                if (checkCollisionEcran(check, nv1)) Player.vx = 0;
+                Ecran *ptrNv = (niveauActuel == 1) ? &nv1 : &nv2;
+                if (checkCollisionEcran(check, *ptrNv)) Player.vx = 0;
+                
                 Player.playerPos.x += Player.vx;
                 vyPerso -= 1;
-                
-                switch (niveauActuel) {
-                    case 1:
-                        gereCollisionEcran(&Player, nv1, &vyPerso, &jumps, &coyoteFrame);
-                        break;
-                    case 2:
-                        gereCollisionEcran(&Player, nv2, &vyPerso, &jumps, &coyoteFrame);
-                        break;
-                }
+                gereCollisionEcran(&Player, *ptrNv, &vyPerso, &jumps);
                 Player.playerPos.y += vyPerso;
 
                 if (Player.playerPos.y < -100) { vie--; Player.playerPos.x = LargeurFenetre/6.8; Player.playerPos.y = HauteurFenetre/2; vyPerso = 0; Player.vx = 0; }
@@ -155,10 +151,13 @@ void gestionEvenement(EvenementGfx evenement) {
                 frameCounter++; if (frameCounter >= 50) { timeVal--; frameCounter = 0; }
                 if (timeVal <= 0) termineBoucleEvenements();
 
-                for (int i = 0; i < MAX_EMERAUDES; i++) if (checkCollisionEmeraude(Player, nv1.emeraudes[i])) { emeraudes++; nv1.emeraudes[i].image = NULL; }
+                for (int i = 0; i < MAX_EMERAUDES; i++) if (checkCollisionEmeraude(Player, ptrNv->emeraudes[i])) { emeraudes++; ptrNv->emeraudes[i].image = NULL; }
                 for (int i = 0; i < MAX_DECORATIONS; i++) {
-                    if (nv1.non_solides[i].texture && strstr((const char *)nv1.non_solides[i].texture, "short")) {
-                        if (checkCollisionPortail(Player, nv1.non_solides[i])) { nv1 = initEcran2(); Player.playerPos.x = LargeurFenetre/2; Player.playerPos.y = HauteurFenetre/2; Player.vx = 0; vyPerso = 0; cam.x = 0; break; }
+                    if (ptrNv->non_solides[i].texture && strstr((const char *)ptrNv->non_solides[i].texture, "short")) {
+                        if (checkCollisionPortail(Player, ptrNv->non_solides[i])) { 
+                            niveauActuel = 2; ptrNv = &nv2; 
+                            Player.playerPos.x = LargeurFenetre/2; Player.playerPos.y = HauteurFenetre/2; Player.vx = 0; vyPerso = 0; cam.x = 0; break; 
+                        }
                     }
                 }
             }
@@ -172,7 +171,10 @@ void gestionEvenement(EvenementGfx evenement) {
                 effaceFenetre(0, 0, 0); couleurCourante(255, 0, 0); afficheChaine("GAME OVER", 40, LargeurFenetre/2 - 100, HauteurFenetre/2 + 20);
                 couleurCourante(255, 255, 255); afficheChaine("Appuyez sur R pour revivre ou ECHAP pour quitter", 18, LargeurFenetre/2 - 200, HauteurFenetre/2 - 40);
             } else {
-                afficheBackground(bgJeu, cam); afficheEcran(nv1, cam); afficheSquelette(mob1, cam); affichePersonnage(Player, cam);
+                afficheBackground(bgJeu, cam); 
+                Ecran *ptrNv = (niveauActuel == 1) ? &nv1 : &nv2;
+                afficheEcran(*ptrNv, cam); 
+                afficheSquelette(mob1, cam); affichePersonnage(Player, cam);
                 couleurCourante(0, 0, 0); afficheChaine(chrono, 24, 30, 550);
                 if (textureIconeEmeraude) ecrisImageTransparente(30, 500, 32, 32, textureIconeEmeraude);
                 char t[10]; sprintf(t, "x %d", emeraudes); afficheChaine(t, 24, 72, 505);
@@ -186,7 +188,7 @@ void gestionEvenement(EvenementGfx evenement) {
                 case 'Q': case 'q': if (etat == ETAT_JEU) keyQ = true; break;
                 case 'D': case 'd': if (etat == ETAT_JEU) keyD = true; break;
                 case ' ': if (etat == ETAT_JEU && jumps != 0) { vyPerso = 12; jumps = 0; } break;
-                case 'R': case 'r': if (etat == ETAT_GAMEOVER) { vie = VIE; emeraudes = 0; timeVal = 500; Player.playerPos.x = LargeurFenetre/2; Player.playerPos.y = HauteurFenetre/2; vyPerso = 0; Player.vx = 0; keyD = keyQ = false; cam.x = 0; nv1 = initEcran1(); etat = ETAT_JEU; } break;
+                case 'R': case 'r': if (etat == ETAT_GAMEOVER) { vie = VIE; emeraudes = 0; timeVal = 500; Player.playerPos.x = LargeurFenetre/2; Player.playerPos.y = HauteurFenetre/2; vyPerso = 0; Player.vx = 0; keyD = keyQ = false; cam.x = 0; niveauActuel = 1; nv1 = initEcran1(); etat = ETAT_JEU; } break;
                 case 27: if (etat == ETAT_JEU) { etat = ETAT_MENU; Player.vx = 0; keyD = keyQ = false; } else termineBoucleEvenements(); break;
             }
             break;
