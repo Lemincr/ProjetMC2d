@@ -811,7 +811,7 @@ if (d.texture != NULL) {
 
                 int posY = (d.coinInferieurGauche.y + 32*j + 16) - cam.y; 
 
-                if (posX + 16 >= 0 && posX - 16 <= LargeurFenetre) ecrisImage(posX, posY, 32, 32, d.texture);
+                if (posX + 16 >= 0 && posX - 16 <= LargeurFenetre) ecrisImageTransparente(posX, posY, 32, 32, d.texture);
 
             }
 
