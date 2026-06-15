@@ -445,7 +445,7 @@ switch (evenement)
             }
             for (int i = 0; i < MAX_DECORATIONS; i++) {
                 // Le (const char *) dit au compilateur : "t'inquiète, traite ça comme du texte normal"
-                unsigned char *textureCmp = lisBMPRGB("images/short_grass.bmp")->donneesRGB;
+                unsigned char *textureCmp = lisBMPRGB("images/obsidienne.bmp")->donneesRGB;
                 switch (niveauActuel) {
                     case 1:
                         if (nv1.non_solides[i].texture != NULL && strcmp((const char*)nv1.non_solides[i].texture, (const char*)textureCmp) == 0) {
