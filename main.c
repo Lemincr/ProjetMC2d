@@ -341,6 +341,7 @@ switch (evenement)
             if (pImgIcone != NULL) {
                 textureIconeEmeraude = pImgIcone->donneesRGB;
             }
+
     
             demandeTemporisation(20);
             break;
@@ -401,7 +402,7 @@ switch (evenement)
             sprintf(chrono, "%d", time);
 
             if (time <= 0) {
-                termineBoucleEvenements();
+                etat = ETAT_GAMEOVER;
             }
 
             for (int i = 0; i < MAX_EMERAUDES; i++) {
@@ -514,10 +515,8 @@ switch (evenement)
                 case 'z':
                     if (etat == ETAT_JEU && jumps != 0) { vyPerso = 12; jumps = 0; }
                     break;
-                case 27:
-                    if (etat == ETAT_JEU) { etat = ETAT_MENU; Player.vx = 0; }
-                    else termineBoucleEvenements();
-                    break;
+
+                
             }
             break;
 
