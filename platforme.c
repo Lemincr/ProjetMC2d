@@ -239,6 +239,31 @@ Ecran initEcran2() {
 	return e;
 }
 
+Plateforme initPlateforme(int x1, int y1, int larg, int haut, char *lienTexture) {
+    Plateforme p; p.coinInferieurGauche.x = x1; p.coinInferieurGauche.y = y1; p.largeur = larg; p.hauteur = haut; p.texture = NULL;
+    DonneesImageRGB * img = lisBMPRGB(lienTexture);
+    if (img != NULL) p.texture = img->donneesRGB;
+    return p;
+}
+
+Plateforme initPlateformeVide() {
+    Plateforme p;
+    p.coinInferieurGauche.x = 0; p.coinInferieurGauche.y = 0; p.largeur = 0; p.hauteur = 0; p.texture = NULL;
+    return p;
+}
+
+Decoration initDecoration(int x1, int y1, int larg, int haut, char *lienTexture) {
+    Decoration d; d.coinInferieurGauche.x = x1; d.coinInferieurGauche.y = y1; d.largeur = larg; d.hauteur = haut; d.texture = NULL;
+    DonneesImageRGB * img = lisBMPRGB(lienTexture);
+    if (img != NULL) d.texture = img->donneesRGB;
+    return d;
+}
+
+Decoration initDecorationVide() {
+    Decoration d;
+    d.coinInferieurGauche.x = 0; d.coinInferieurGauche.y = 0; d.largeur = 0; d.hauteur = 0; d.texture = NULL;
+    return d;
+}
 
 Piece initPiece(int x1, int y1, char *lienTexture) {
 	Piece p;

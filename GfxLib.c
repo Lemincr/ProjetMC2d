@@ -100,9 +100,6 @@ typedef void (*FonctionTroisInts)(int a, int b, int c);
 typedef void (*FonctionQuatreInts)(int a, int b, int c, int d);
 typedef void (*FonctionCharDeuxInts)(unsigned char a, int b, int c);
 
-/* La constante Pi */
-// static const double Pi = 3.14159265358979323846;
-
 /* Memorise le dernier caractere clavier qui a ete genere */
 static GLubyte sCaractereClavier = ' ';
 /* Memorise la derniere touche speciale du clavier qui a ete pressee */
@@ -113,12 +110,6 @@ static EtatBoutonSouris sEtatBoutonSouris = GaucheRelache;
 static int sAbscisseSouris = 0;
 /* Memorise l'ordonnee courante de la souris */
 static int sOrdonneeSouris = 0;
-// Memorise l'appui de la touche Shift
-//static bool sAppuiToucheShift = false;
-// Memorise l'appui de la touche Ctrl
-//static bool sAppuiToucheCtrl = false;
-// Memorise l'appui de la touche Alt
-//static bool sAppuiToucheAlt = false;
 /* Booleen indiquant si la fonction lanceBoucleEvenements a ete appelee */
 static bool boucleEvenementsLancee = false;
 // Memorisation de l'intervalle en ms entre deux evenements timer
@@ -136,8 +127,12 @@ static float sEpaisseurDeTrait = 1.f;
 static FonctionVide sFonctionAffichage = (FonctionVide)NULL;
 /* Valeur de la callback de gestion du clavier */
 static FonctionCharDeuxInts sFonctionClavier = (FonctionCharDeuxInts)NULL;
+/* Valeur de la callback de gestion du relachement des touches du clavier */
+static FonctionCharDeuxInts sFonctionClavierRelache = (FonctionCharDeuxInts)NULL;
 /* Valeur de la callback de gestion des touches speciales du clavier */
 static FonctionTroisInts sFonctionClavierSpecial = (FonctionTroisInts)NULL;
+/* Valeur de la callback de gestion du relachement des touches speciales du clavier */
+static FonctionTroisInts sFonctionClavierSpecialRelache = (FonctionTroisInts)NULL;
 /* Valeur de la callback de gestion des boutons souris */
 static FonctionQuatreInts sFonctionBoutonsSouris = (FonctionQuatreInts)NULL;
 /* Valeur de la callback de deplacement de la souris */
@@ -156,8 +151,12 @@ extern void gestionEvenement(EvenementGfx evenement);
 static void fonctionAffichage(void);
 /* Fonction callback par defaut appelee lors de l'appui sur une touche du clavier */
 static void fonctionClavier(GLubyte caractere, int xSouris, int ySouris);
+/* Fonction callback par defaut appelee lors du relachement d'une touche du clavier */
+static void fonctionClavierRelache(GLubyte caractere, int xSouris, int ySouris);
 /* Fonction callback par defaut appelee lors de l'appui sur une touche speciale du clavier */
 static void fonctionClavierSpecial(int codeTouche, int xSouris, int ySouris);
+/* Fonction callback par defaut appelee lors du relachement d'une touche speciale du clavier */
+static void fonctionClavierSpecialRelache(int codeTouche, int xSouris, int ySouris);
 /* Fonction callback par defaut appelee lors d'un clic de bouton souris */
 static void fonctionBoutonsSouris(int bouton, int etat, int xSouris, int ySouris);
 /* Fonction callback par defaut appelee lors du deplacement de la souris */
@@ -218,7 +217,9 @@ static void prepareFenetre_En_DeTaille(const char *nom, int xCoinHautGauche, int
 	if (sFonctionAffichage == NULL) sFonctionAffichage = fonctionAffichage;
 	/* La fonction de gestion d'inactivite n'est pas geree par defaut car elle consomme trop de ressources */
 	if (sFonctionClavier == NULL) sFonctionClavier = fonctionClavier;
+	if (sFonctionClavierRelache == NULL) sFonctionClavierRelache = fonctionClavierRelache;
 	if (sFonctionClavierSpecial == NULL) sFonctionClavierSpecial = fonctionClavierSpecial;
+	if (sFonctionClavierSpecialRelache == NULL) sFonctionClavierSpecialRelache = fonctionClavierSpecialRelache;
 	if (sFonctionBoutonsSouris == NULL) sFonctionBoutonsSouris = fonctionBoutonsSouris;
 	if (sFonctionDeplacementSouris == NULL) sFonctionDeplacementSouris = fonctionDeplacementSouris;
 	// La fonction de gestion de deplacement passif souris n'est pas geree par defaut car elle consomme trop de ressources
@@ -257,7 +258,9 @@ void lanceBoucleEvenements(void)
 	/* Positionne les callbacks */
 	glutDisplayFunc(sFonctionAffichage);
 	glutKeyboardFunc(sFonctionClavier);
+	glutKeyboardUpFunc(sFonctionClavierRelache);
 	glutSpecialFunc(sFonctionClavierSpecial);
+	glutSpecialUpFunc(sFonctionClavierSpecialRelache);
 	glutMouseFunc(sFonctionBoutonsSouris);
 	glutMotionFunc(sFonctionDeplacementSouris);
 	glutPassiveMotionFunc(sFonctionDeplacementPassifSouris);
@@ -705,6 +708,13 @@ static void fonctionClavier(GLubyte caractere, int xSouris, int ySouris)
 	gestionEvenement(Clavier);
 }
 
+/* Fonction callback par defaut appelee lors du relachement d'une touche du clavier */
+static void fonctionClavierRelache(GLubyte caractere, int xSouris, int ySouris)
+{
+	sCaractereClavier = caractere;
+	gestionEvenement(ClavierRelache);
+}
+
 /* Fonction callback par defaut appelee lors de l'appui sur une touche speciale du clavier */
 static void fonctionClavierSpecial(int codeTouche, int xSouris, int ySouris)
 {
@@ -792,6 +802,32 @@ static void fonctionClavierSpecial(int codeTouche, int xSouris, int ySouris)
 
 	/* Puis on appelle la fonction generique de gestion des evenements */
 	gestionEvenement(ClavierSpecial);
+}
+
+/* Fonction callback par defaut appelee lors du relachement d'une touche speciale du clavier */
+static void fonctionClavierSpecialRelache(int codeTouche, int xSouris, int ySouris)
+{
+	switch(codeTouche)
+	{
+		case GLUT_KEY_F1: sToucheClavier = ToucheF1; break;
+		case GLUT_KEY_F2: sToucheClavier = ToucheF2; break;
+		case GLUT_KEY_F3: sToucheClavier = ToucheF3; break;
+		case GLUT_KEY_F4: sToucheClavier = ToucheF4; break;
+		case GLUT_KEY_F5: sToucheClavier = ToucheF5; break;
+		case GLUT_KEY_F6: sToucheClavier = ToucheF6; break;
+		case GLUT_KEY_F7: sToucheClavier = ToucheF7; break;
+		case GLUT_KEY_F8: sToucheClavier = ToucheF8; break;
+		case GLUT_KEY_F9: sToucheClavier = ToucheF9; break;
+		case GLUT_KEY_F10: sToucheClavier = ToucheF10; break;
+		case GLUT_KEY_F11: sToucheClavier = ToucheF11; break;
+		case GLUT_KEY_F12: sToucheClavier = ToucheF12; break;
+		case GLUT_KEY_UP: sToucheClavier = ToucheFlecheHaut; break;
+		case GLUT_KEY_DOWN: sToucheClavier = ToucheFlecheBas; break;
+		case GLUT_KEY_LEFT: sToucheClavier = ToucheFlecheGauche; break;
+		case GLUT_KEY_RIGHT: sToucheClavier = ToucheFlecheDroite; break;
+		default: sToucheClavier = ToucheNonGeree;
+	}
+	gestionEvenement(ClavierRelache); // Note: Special keys also send ClavierRelache for simplicity here
 }
 
 /* Fonction callback par defaut appelee lors d'un clic de bouton souris */
