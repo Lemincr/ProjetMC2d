@@ -148,7 +148,7 @@ int checkCollisionEmeraude(Personnage perso, Piece p);
 
 int checkCollision(Personnage perso, Plateforme plat);
 
-void gereCollisionPlateforme(Personnage *perso, Plateforme plat, int *vy, int *jumps);
+void gereCollisionPlateforme(Personnage *perso, Plateforme plat, int *vy, int *jumps, int *coyote);
 
 int checkCollisionPortail(Personnage perso, Decoration d);
 
@@ -156,7 +156,7 @@ int checkCollisionPortail(Personnage perso, Decoration d);
 
 void afficheEcran(Ecran e, Camera cam);
 
-void gereCollisionEcran(Personnage *perso, Ecran e, int *vy, int *jumps);
+void gereCollisionEcran(Personnage *perso, Ecran e, int *vy, int *jumps, int *coyote);
 
 
 
@@ -267,6 +267,8 @@ static char chrono[3];
 
 static unsigned char *textureIconeEmeraude = NULL;
 
+static int coyoteFrame = 5;
+
 switch (evenement)
     {
         case Initialisation:
@@ -358,7 +360,7 @@ switch (evenement)
                 Player.playerPos.x += Player.vx;
 
                 vyPerso -= 1;
-                gereCollisionEcran(&Player, nv1, &vyPerso, &jumps);
+                gereCollisionEcran(&Player, nv1, &vyPerso, &jumps, &coyoteFrame);
                 Player.playerPos.y += vyPerso;
 
                 if (Player.playerPos.y < -100) {
@@ -411,20 +413,26 @@ switch (evenement)
                 }
             }
             for (int i = 0; i < MAX_DECORATIONS; i++) {
-    // Le (const char *) dit au compilateur : "t'inquiète, traite ça comme du texte normal"
-    if (nv1.non_solides[i].texture != NULL && strstr((const char *)nv1.non_solides[i].texture, "short") != NULL) {
-        
-        if (checkCollisionPortail(Player, nv1.non_solides[i]) == 1) {
-            nv1 = initEcran2();
-            Player.playerPos.x = LargeurFenetre / 2;
-            Player.playerPos.y = HauteurFenetre / 2;
-            Player.vx = 0;
-            vyPerso = 0;
-            cam.x = 0;
-            break; 
-        }
-    }
-}
+                // Le (const char *) dit au compilateur : "t'inquiète, traite ça comme du texte normal"
+                if (nv1.non_solides[i].texture != NULL && strstr((const char *)nv1.non_solides[i].texture, "short") != NULL) {
+                    
+                    if (checkCollisionPortail(Player, nv1.non_solides[i]) == 1) {
+                        nv1 = initEcran2();
+                        Player.playerPos.x = LargeurFenetre / 2;
+                        Player.playerPos.y = HauteurFenetre / 2;
+                        Player.vx = 0;
+                        vyPerso = 0;
+                        cam.x = 0;
+                        break; 
+                    }
+                }
+            }
+
+            coyoteFrame--;
+
+            if (coyoteFrame <= 0) {
+                jumps = 0;
+            }
 
             rafraichisFenetre();
             break;
@@ -644,15 +652,18 @@ return 1;
 
 
 
-void gereCollisionPlateforme(Personnage *perso, Plateforme plat, int *vy, int *jumps) {
+void gereCollisionPlateforme(Personnage *perso, Plateforme plat, int *vy, int *jumps, int *coyote) {
 
-if (checkCollision(*perso, plat) == 1) {
+    if (checkCollision(*perso, plat) == 1) {
 
-if ((caractereClavier() == 'z') || (caractereClavier() == 'Z')) { if (*vy >= 0) return; }
+        if ((caractereClavier() == 'z') || (caractereClavier() == 'Z')) { if (*vy >= 0) return; }
 
-*vy = 0; perso->playerPos.y = plat.coinInferieurGauche.y + plat.hauteur + perso->hauteurs[0]/4 + 1; *jumps = 1;
+            *vy = 0; 
+            perso->playerPos.y = plat.coinInferieurGauche.y + plat.hauteur + perso->hauteurs[0]/4 + 1; 
+            *jumps = 1;
+            *coyote = 5;
 
-}
+    }
 
 }
 
@@ -682,13 +693,13 @@ affichePlateforme(e.solides[i], cam);
 
 
 
-void gereCollisionEcran(Personnage *perso, Ecran e, int *vy, int *jumps) {
+void gereCollisionEcran(Personnage *perso, Ecran e, int *vy, int *jumps, int *coyote) {
 
-for (int i=0; i<MAX_PLATEFORMES; i++) {
+    for (int i=0; i<MAX_PLATEFORMES; i++) {
 
-gereCollisionPlateforme(perso, e.solides[i], vy, jumps);
+        gereCollisionPlateforme(perso, e.solides[i], vy, jumps, coyote);
 
-}
+    }
 
 }
 
