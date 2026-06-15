@@ -128,7 +128,7 @@ void gestionEvenement(EvenementGfx evenement) {
                 if (checkCollisionEcran(check, nv1)) Player.vx = 0;
                 Player.playerPos.x += Player.vx;
                 vyPerso -= 1;
-                gereCollisionEcran(&Player, nv1, &vyPerso, &jumps);
+                gereCollisionEcran(&Player, nv1, &vyPerso, &jumps, &coyoteFrame);
                 Player.playerPos.y += vyPerso;
 
                 if (Player.playerPos.y < -100) { vie--; Player.playerPos.x = LargeurFenetre/6.8; Player.playerPos.y = HauteurFenetre/2; vyPerso = 0; Player.vx = 0; }
