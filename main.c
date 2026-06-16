@@ -148,7 +148,7 @@ int checkCollisionEmeraude(Personnage perso, Piece p);
 
 int checkCollision(Personnage perso, Plateforme plat);
 
-void gereCollisionPlateforme(Personnage *perso, Plateforme plat, int *vy, int *jumps);
+void gereCollisionPlateforme(Personnage *perso, Plateforme plat, int *vy, int *jumps, int *coyote);
 
 int checkCollisionPortail(Personnage perso, Decoration d);
 
@@ -156,7 +156,7 @@ int checkCollisionPortail(Personnage perso, Decoration d);
 
 void afficheEcran(Ecran e, Camera cam);
 
-void gereCollisionEcran(Personnage *perso, Ecran e, int *vy, int *jumps);
+void gereCollisionEcran(Personnage *perso, Ecran e, int *vy, int *jumps, int *coyote);
 
 
 
@@ -237,16 +237,19 @@ static bool pleinEcran = false;
 static Personnage Player;
 
 static Ecran nv1;
+static Ecran nv2;
 
-    static unsigned char *textureFondMenu = NULL;
+static int niveauActuel = 1;
 
-    static Camera cam = {0};
+static unsigned char *textureFondMenu = NULL;
 
-    static Background bgJeu = {NULL, 0, 0};
+static Camera cam = {0};
 
     static Zombie mob1;
 
-    static BoutonImg bJouerMenu, bQuitterMenu;
+static Squelette mob1;
+
+static BoutonImg bJouerMenu, bQuitterMenu;
 
 
 static int vyPerso = 0;
@@ -254,9 +257,9 @@ static int vyPerso = 0;
 static int jumps = 0;
 
 
- static int vie = VIE;
-    static unsigned char *textureCoeur = NULL;
-    static int largeurCoeur = 0, hauteurCoeur = 0;
+static int vie = VIE;
+static unsigned char *textureCoeur = NULL;
+static int largeurCoeur = 0, hauteurCoeur = 0;
 
 
 static int time = 500;
@@ -266,6 +269,8 @@ static int frameCounter = 0;
 static char chrono[3];
 
 static unsigned char *textureIconeEmeraude = NULL;
+
+static int coyoteFrame = 5;
 
 switch (evenement)
     {
@@ -303,6 +308,7 @@ switch (evenement)
             }
 
             nv1 = initEcran1();
+            nv2 = initEcran2();
 
             DonneesImageRGB *pImageFondMenu = lisBMPRGB("images/background.bmp");
             if (pImageFondMenu != NULL) textureFondMenu = pImageFondMenu->donneesRGB;
@@ -351,14 +357,31 @@ switch (evenement)
                 PlayerColCheck.playerPos.x = Player.playerPos.x + Player.vx;
                 PlayerColCheck.playerPos.y = Player.playerPos.y + 10;
                 
-                if (checkCollisionEcran(PlayerColCheck, nv1) == 1) {
-                    Player.vx = 0;
-                }
+                switch (niveauActuel) {
+                    case 1:
+                        if (checkCollisionEcran(PlayerColCheck, nv1) == 1) {
+                            Player.vx = 0;
+                        }
+                        break;
+                    case 2:
+                        if (checkCollisionEcran(PlayerColCheck, nv2) == 1) {
+                            Player.vx = 0;
+                        }
+                        break;
+                }   
                 
                 Player.playerPos.x += Player.vx;
 
                 vyPerso -= 1;
-                gereCollisionEcran(&Player, nv1, &vyPerso, &jumps);
+                
+                switch (niveauActuel) {
+                    case 1:
+                        gereCollisionEcran(&Player, nv1, &vyPerso, &jumps, &coyoteFrame);
+                        break;
+                    case 2:
+                        gereCollisionEcran(&Player, nv2, &vyPerso, &jumps, &coyoteFrame);
+                        break;
+                }
                 Player.playerPos.y += vyPerso;
 
                 if (Player.playerPos.y < -100) {
@@ -403,28 +426,65 @@ switch (evenement)
             if (time <= 0) {
                 termineBoucleEvenements();
             }
-
-            for (int i = 0; i < MAX_EMERAUDES; i++) {
-                if (checkCollisionEmeraude(Player, nv1.emeraudes[i]) == 1) {
-                    emeraudes++;
-                    nv1.emeraudes[i].image = NULL;
-                }
+            switch (niveauActuel) {
+                case 1:
+                    for (int i = 0; i < MAX_EMERAUDES; i++) {
+                        if (checkCollisionEmeraude(Player, nv1.emeraudes[i]) == 1) {
+                            emeraudes++;
+                            nv1.emeraudes[i].image = NULL;
+                        }
+                    }
+                    break;
+                case 2:
+                    for (int i = 0; i < MAX_EMERAUDES; i++) {
+                        if (checkCollisionEmeraude(Player, nv2.emeraudes[i]) == 1) {
+                            emeraudes++;
+                            nv2.emeraudes[i].image = NULL;
+                        }
+                    }
             }
             for (int i = 0; i < MAX_DECORATIONS; i++) {
-    // Le (const char *) dit au compilateur : "t'inquiète, traite ça comme du texte normal"
-    if (nv1.non_solides[i].texture != NULL && strstr((const char *)nv1.non_solides[i].texture, "short") != NULL) {
-        
-        if (checkCollisionPortail(Player, nv1.non_solides[i]) == 1) {
-            nv1 = initEcran2();
-            Player.playerPos.x = LargeurFenetre / 2;
-            Player.playerPos.y = HauteurFenetre / 2;
-            Player.vx = 0;
-            vyPerso = 0;
-            cam.x = 0;
-            break; 
-        }
-    }
-}
+                // Le (const char *) dit au compilateur : "t'inquiète, traite ça comme du texte normal"
+                unsigned char *textureCmp = lisBMPRGB("images/short_grass.bmp")->donneesRGB;
+                switch (niveauActuel) {
+                    case 1:
+                        if (nv1.non_solides[i].texture != NULL && strcmp((const char*)nv1.non_solides[i].texture, (const char*)textureCmp) == 0) {
+                            if (checkCollisionPortail(Player, nv1.non_solides[i]) == 1) {
+                                if (niveauActuel == 1) {
+                                    niveauActuel++;
+                                }
+                                Player.playerPos.x = LargeurFenetre / 2;
+                                Player.playerPos.y = HauteurFenetre / 2;
+                                Player.vx = 0;
+                                vyPerso = 0;
+                                cam.x = 0;
+                                break; 
+                            }
+                        }
+                        break;
+                    case 2:
+                        if (nv2.non_solides[i].texture != NULL && strcmp((const char*)nv2.non_solides[i].texture, (const char*)textureCmp) == 0) {
+                            if (checkCollisionPortail(Player, nv2.non_solides[i]) == 1) {
+                                if (niveauActuel == 1) {
+                                    niveauActuel++;
+                                }
+                                Player.playerPos.x = LargeurFenetre / 2;
+                                Player.playerPos.y = HauteurFenetre / 2;
+                                Player.vx = 0;
+                                vyPerso = 0;
+                                cam.x = 0;
+                                break; 
+                            }
+                        }
+                        break;
+                }
+            }
+
+            coyoteFrame--;
+
+            if (coyoteFrame <= 0) {
+                jumps = 0;
+            }
 
             rafraichisFenetre();
             break;
@@ -512,11 +572,8 @@ switch (evenement)
                     break;
                 case 'Z':
                 case 'z':
+                case ' ':
                     if (etat == ETAT_JEU && jumps != 0) { vyPerso = 12; jumps = 0; }
-                    break;
-                case 27:
-                    if (etat == ETAT_JEU) { etat = ETAT_MENU; Player.vx = 0; }
-                    else termineBoucleEvenements();
                     break;
             }
             break;
@@ -644,15 +701,18 @@ return 1;
 
 
 
-void gereCollisionPlateforme(Personnage *perso, Plateforme plat, int *vy, int *jumps) {
+void gereCollisionPlateforme(Personnage *perso, Plateforme plat, int *vy, int *jumps, int *coyote) {
 
-if (checkCollision(*perso, plat) == 1) {
+    if (checkCollision(*perso, plat) == 1) {
 
-if ((caractereClavier() == 'z') || (caractereClavier() == 'Z')) { if (*vy >= 0) return; }
+        if ((caractereClavier() == 'z') || (caractereClavier() == 'Z')) { if (*vy >= 0) return; }
 
-*vy = 0; perso->playerPos.y = plat.coinInferieurGauche.y + plat.hauteur + perso->hauteurs[0]/4 + 1; *jumps = 1;
+            *vy = 0; 
+            perso->playerPos.y = plat.coinInferieurGauche.y + plat.hauteur + perso->hauteurs[0]/4 + 1; 
+            *jumps = 1;
+            *coyote = 5;
 
-}
+    }
 
 }
 
@@ -682,13 +742,13 @@ affichePlateforme(e.solides[i], cam);
 
 
 
-void gereCollisionEcran(Personnage *perso, Ecran e, int *vy, int *jumps) {
+void gereCollisionEcran(Personnage *perso, Ecran e, int *vy, int *jumps, int *coyote) {
 
-for (int i=0; i<MAX_PLATEFORMES; i++) {
+    for (int i=0; i<MAX_PLATEFORMES; i++) {
 
-gereCollisionPlateforme(perso, e.solides[i], vy, jumps);
+        gereCollisionPlateforme(perso, e.solides[i], vy, jumps, coyote);
 
-}
+    }
 
 }
 
@@ -744,7 +804,7 @@ if (d.texture != NULL) {
 
                 int posY = (d.coinInferieurGauche.y + 32*j + 16) - cam.y; 
 
-                if (posX + 16 >= 0 && posX - 16 <= LargeurFenetre) ecrisImage(posX, posY, 32, 32, d.texture);
+                if (posX + 16 >= 0 && posX - 16 <= LargeurFenetre) ecrisImageTransparente(posX, posY, 32, 32, d.texture);
 
             }
 
@@ -791,26 +851,26 @@ Decoration initDecorationVide() {
 int checkCollisionEmeraude(Personnage perso, Piece p) {
     if (p.image == NULL) return 0;
 
-    int lPerso = perso.largeurs[0], hPerso = perso.hauteurs[0];
+    int lPerso = perso.largeurs[perso.frameActuelle], hPerso = perso.hauteurs[perso.frameActuelle];
     
-    if (perso.playerPos.x + lPerso/4 < p.pos.x) return 0;
-    if (perso.playerPos.x - lPerso/4 > (p.pos.x + 32)) return 0;
-    if (perso.playerPos.y + hPerso/4 < p.pos.y) return 0;
-    if (perso.playerPos.y - hPerso/4 > (p.pos.y + 32)) return 0;
+    if (perso.playerPos.x + lPerso/2 < p.pos.x - 16) return 0;
+    if (perso.playerPos.x - lPerso/2 > (p.pos.x + 16)) return 0;
+    if (perso.playerPos.y + hPerso/2 < p.pos.y - 16) return 0;
+    if (perso.playerPos.y - hPerso/2 > (p.pos.y + 16)) return 0;
 
     return 1;
 }
 int checkCollisionPortail(Personnage perso, Decoration d) {
     if (d.texture == NULL) return 0;
 
-    int lPerso = perso.largeurs[0];
-    int hPerso = perso.hauteurs[0];
+    int lPerso = perso.largeurs[perso.frameActuelle];
+    int hPerso = perso.hauteurs[perso.frameActuelle];
 
     
-    if (perso.playerPos.x + lPerso < d.coinInferieurGauche.x) return 0;
-    if (perso.playerPos.x > (d.coinInferieurGauche.x + d.largeur)) return 0;
-    if (perso.playerPos.y + hPerso < d.coinInferieurGauche.y) return 0;
-    if (perso.playerPos.y > (d.coinInferieurGauche.y + d.hauteur)) return 0;
+    if (perso.playerPos.x + lPerso/2 < d.coinInferieurGauche.x) return 0;
+    if (perso.playerPos.x - lPerso/2 > (d.coinInferieurGauche.x + d.largeur)) return 0;
+    if (perso.playerPos.y + hPerso/2 < d.coinInferieurGauche.y) return 0;
+    if (perso.playerPos.y - hPerso/2 + 2 > (d.coinInferieurGauche.y + d.hauteur)) return 0;
 
     return 1;
 }
