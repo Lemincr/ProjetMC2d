@@ -101,6 +101,29 @@ typedef struct zombie {
 } Zombie;
 
 
+typedef struct squelette {
+
+    Coord pos;
+
+    unsigned char *sprites[NB_SPRITES_ZOMBIE];
+
+    int largeurs[NB_SPRITES_ZOMBIE];
+
+    int hauteurs[NB_SPRITES_ZOMBIE];
+
+    int frameActuelle;
+
+    int timerAnim;
+
+    bool regardeADroite;
+
+    int vx;
+
+    int range;
+
+    int origineX;
+
+} Squelette;
 
 
 
@@ -241,12 +264,13 @@ static unsigned char *textureFondMenu = NULL;
 
 static Camera cam = {0};
 
-    static Zombie mob1;
+static Zombie mob2;
 
 static Squelette mob1;
 
 static BoutonImg bJouerMenu, bQuitterMenu;
 
+static Background bgJeu;
 
 static int vyPerso = 0;
 
@@ -256,6 +280,7 @@ static int jumps = 0;
 static int vie = VIE;
 static unsigned char *textureCoeur = NULL;
 static int largeurCoeur = 0, hauteurCoeur = 0;
+
 
 
 static int time = 500;
@@ -495,7 +520,7 @@ switch (evenement)
             else {
                 afficheBackground(bgJeu, cam);
                 afficheEcran(nv1, cam);
-                afficheZombie(mob1, cam);
+                afficheZombie(mob2, cam);
                 affichePersonnage(Player, cam);
                 
                 afficheChaine(chrono, 24, 30, 830);
