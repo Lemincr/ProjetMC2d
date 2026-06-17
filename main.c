@@ -22,7 +22,7 @@
 
 #define ETAT_GAMEOVER 2
 
-#define VIE 2
+#define VIE 4
 
 
 
@@ -413,8 +413,8 @@ switch (evenement)
                                 niveauActuel++;
 
                             }
-                            Player.playerPos.x = LargeurFenetre / 2;
-                            Player.playerPos.y = HauteurFenetre / 2;
+                            Player.playerPos.x = LargeurFenetre/15;
+                            Player.playerPos.y = HauteurFenetre/5;
                             Player.vx = 0;
                             vyPerso = 0;
                             cam.x = 0;
@@ -426,8 +426,8 @@ switch (evenement)
                             if (niveauActuel == 1) {
                                 niveauActuel++;
                             }
-                            Player.playerPos.x = LargeurFenetre / 2;
-                            Player.playerPos.y = HauteurFenetre / 2;
+                            Player.playerPos.x = LargeurFenetre/15;
+                            Player.playerPos.y = HauteurFenetre/5;
                             Player.vx = 0;
                             vyPerso = 0;
                             cam.x = 0;
@@ -462,7 +462,15 @@ switch (evenement)
             }
             else {
                 afficheBackground(bgJeu, cam);
-                afficheEcran(nv1, cam);
+                
+                switch (niveauActuel) {
+                    case 1:
+                        afficheEcran(nv1, cam);
+                        break;
+                    case 2:
+                        afficheEcran(nv2, cam);
+                        break;
+                }
                 affichePersonnage(Player, cam);
                 afficheChaine(chrono, 24, 30, 830);
                 
@@ -508,8 +516,8 @@ switch (evenement)
                         time = 500;
                         frameCounter = 0;
                         
-                        Player.playerPos.x = LargeurFenetre / 2;
-                        Player.playerPos.y = HauteurFenetre / 2;
+                        Player.playerPos.x = LargeurFenetre/15;
+                        Player.playerPos.y = HauteurFenetre/5;
                         vyPerso = 0;
                         Player.vx = 0;
                         
@@ -853,14 +861,5 @@ void gereMobs(Ecran *e) {
             e->zombies[i].timerAnim = 0;
         }
     }
-    for (int i = 0; i<MAX_SQUELETTES; i++) {
-        e->squelettes[i].pos.x += e->squelettes[i].vx;
-        if (e->squelettes[i].pos.x > e->squelettes[i].origineX + e->squelettes[i].range) { e->squelettes[i].vx = -2; e->squelettes[i].regardeADroite = true; }
-        else if (e->squelettes[i].pos.x < e->squelettes[i].origineX - e->squelettes[i].range) { e->squelettes[i].vx = 2; e->squelettes[i].regardeADroite = false; }
-        e->squelettes[i].timerAnim++;
-        if (e->squelettes[i].timerAnim >= 5) {
-            e->squelettes[i].frameActuelle = (e->squelettes[i].frameActuelle + 1) % NB_SPRITES_SQUELETTE;
-            e->squelettes[i].timerAnim = 0;
-        }
-    }
+    
 }
