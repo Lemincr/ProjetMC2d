@@ -22,7 +22,7 @@
 
 #define ETAT_GAMEOVER 2
 
-#define VIE 2
+#define VIE 4
 
 
 
@@ -331,10 +331,10 @@ switch (evenement)
             nv1 = initEcran1();
             nv2 = initEcran2();
 
-            DonneesImageRGB *pImageFondMenu = lisBMPRGB("images/background.bmp");
+            DonneesImageRGB *pImageFondMenu = lisBMPRGB("images/debut1850.bmp");
             if (pImageFondMenu != NULL) textureFondMenu = pImageFondMenu->donneesRGB;
             
-            DonneesImageRGB *pImgJouer = lisBMPRGB("images/jouer.bmp");
+            DonneesImageRGB *pImgJouer = lisBMPRGB("images/jouer2.bmp");
             if (pImgJouer != NULL) {
                 bJouerMenu.image = pImgJouer->donneesRGB;
                 bJouerMenu.largeur = pImgJouer->largeurImage;
@@ -343,7 +343,7 @@ switch (evenement)
                 bJouerMenu.y = HauteurFenetre / 2 -60;
             }
             
-            DonneesImageRGB *pImgLeave = lisBMPRGB("images/leave.bmp");
+            DonneesImageRGB *pImgLeave = lisBMPRGB("images/leave2.bmp");
             if (pImgLeave != NULL) {
                 bQuitterMenu.image = pImgLeave->donneesRGB;
                 bQuitterMenu.largeur = pImgLeave->largeurImage;
@@ -352,7 +352,7 @@ switch (evenement)
                 bQuitterMenu.y = HauteurFenetre / 2 - 80;
             }
 
-            DonneesImageRGB *pImageBgJeu = lisBMPRGB("images/backgroundlevel1.bmp");
+            DonneesImageRGB *pImageBgJeu = lisBMPRGB("images/background1850.bmp");
             if (pImageBgJeu != NULL) {
                 bgJeu.texture = pImageBgJeu->donneesRGB;
                 bgJeu.largeur = pImageBgJeu->largeurImage;
