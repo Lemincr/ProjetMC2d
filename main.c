@@ -132,7 +132,7 @@ void gereCollisionPlateforme(Personnage *perso, Plateforme plat, int *vy, int *j
 
 void afficheEcran(Ecran e, Camera cam);
 
-void gereCollisionEcran(Personnage *perso, Ecran e, int *vy, int *jumps, int *coyote, int *invincibilityFrame, int *vie);
+void gereCollisionEcran(Personnage *perso, Ecran *e, int *vy, int *jumps, int *coyote, int *invincibilityFrame, int *vie);
 
 void gereMobs(Ecran *e);
 
@@ -343,10 +343,10 @@ switch (evenement)
                 
                 switch (niveauActuel) {
                     case 1:
-                        gereCollisionEcran(&Player, nv1, &vyPerso, &jumps, &coyoteFrame, &invincibilityFrame, &vie);
+                        gereCollisionEcran(&Player, &nv1, &vyPerso, &jumps, &coyoteFrame, &invincibilityFrame, &vie);
                         break;
                     case 2:
-                        gereCollisionEcran(&Player, nv2, &vyPerso, &jumps, &coyoteFrame, &invincibilityFrame, &vie);
+                        gereCollisionEcran(&Player, &nv2, &vyPerso, &jumps, &coyoteFrame, &invincibilityFrame, &vie);
                         break;
                 }
                 Player.playerPos.y += vyPerso;
@@ -601,7 +601,7 @@ void affichePersonnage(Personnage p, Camera cam) {
 
 
 void afficheZombie(Zombie z, Camera cam) {
-
+    if (!z.actif) return;
     unsigned char *sprite = z.sprites[z.frameActuelle];
 
     int l = z.largeurs[z.frameActuelle], h = z.hauteurs[z.frameActuelle];
@@ -723,20 +723,20 @@ void afficheEcran(Ecran e, Camera cam) {
 
 
 
-void gereCollisionEcran(Personnage *perso, Ecran e, int *vy, int *jumps, int *coyote, int *invincibilityFrame, int *vie) {
+void gereCollisionEcran(Personnage *perso, Ecran *e, int *vy, int *jumps, int *coyote, int *invincibilityFrame, int *vie) {
 
     for (int i=0; i<MAX_PLATEFORMES; i++) {
 
-        gereCollisionPlateforme(perso, e.solides[i], vy, jumps, coyote);
+        gereCollisionPlateforme(perso, e->solides[i], vy, jumps, coyote);
 
     }
 
     for (int i=0; i<MAX_ZOMBIES; i++) {
-        gereCollisionZombie(*perso, &(e.zombies[i]), invincibilityFrame, vie);
+        gereCollisionZombie(*perso, &(e->zombies[i]), invincibilityFrame, vie);
     }
 
     for (int i=0; i<MAX_SQUELETTES; i++) {
-        gereCollisionSquelette(*perso, &(e.squelettes[i]), invincibilityFrame, vie);
+        gereCollisionSquelette(*perso, &(e->squelettes[i]), invincibilityFrame, vie);
     }
 
 }
@@ -851,7 +851,7 @@ int checkCollisionEmeraude(Personnage perso, Piece p) {
 }
 
 void afficheSquelette(Squelette s, Camera cam) {
-
+    if (!s.actif) return;
     unsigned char *sprite = s.sprites[s.frameActuelle];
 
     int l = s.largeurs[s.frameActuelle], h = s.hauteurs[s.frameActuelle];
@@ -868,6 +868,7 @@ void afficheSquelette(Squelette s, Camera cam) {
 
 void gereMobs(Ecran *e) {
     for (int i = 0; i<MAX_ZOMBIES; i++) {
+        if (!e->zombies[i].actif) continue;
         e->zombies[i].pos.x += e->zombies[i].vx;
         if (e->zombies[i].pos.x > e->zombies[i].origineX + e->zombies[i].range) { e->zombies[i].vx = -2; e->zombies[i].regardeADroite = true; }
         else if (e->zombies[i].pos.x < e->zombies[i].origineX - e->zombies[i].range) { e->zombies[i].vx = 2; e->zombies[i].regardeADroite = false; }
@@ -877,10 +878,23 @@ void gereMobs(Ecran *e) {
             e->zombies[i].timerAnim = 0;
         }
     }
+
+    for (int i = 0; i<MAX_SQUELETTES; i++) {
+        if (!e->squelettes[i].actif) continue;
+        e->squelettes[i].pos.x += e->squelettes[i].vx;
+        if (e->squelettes[i].pos.x > e->squelettes[i].origineX + e->squelettes[i].range) { e->squelettes[i].vx = -2; e->squelettes[i].regardeADroite = true; }
+        else if (e->squelettes[i].pos.x < e->squelettes[i].origineX - e->squelettes[i].range) { e->squelettes[i].vx = 2; e->squelettes[i].regardeADroite = false; }
+        e->squelettes[i].timerAnim++;
+        if (e->squelettes[i].timerAnim >= 5) {
+            e->squelettes[i].frameActuelle = (e->squelettes[i].frameActuelle + 1) % NB_SPRITES_SQUELETTE;
+            e->squelettes[i].timerAnim = 0;
+        }
+    }
     
 }
 
 int checkCollisionZombie(Personnage p, Zombie z) {
+    if (!z.actif) return 0;
     if (p.playerPos.x < z.pos.x - 22) return 0;
     if (p.playerPos.x > z.pos.x + 22) return 0;
     if (p.playerPos.y + 32 < z.pos.y - 32) return 0;
@@ -901,6 +915,7 @@ int checkCollisionZombie(Personnage p, Zombie z) {
 
 
 int checkCollisionSquelette(Personnage p, Squelette s) {
+    if (!s.actif) return 0;
     if (p.playerPos.x < s.pos.x - 22) return 0;
     if (p.playerPos.x > s.pos.x + 22) return 0;
     if (p.playerPos.y + 32 < s.pos.y - 32) return 0;
@@ -916,9 +931,11 @@ int checkCollisionSquelette(Personnage p, Squelette s) {
 }
 
 void gereCollisionZombie(Personnage p, Zombie *z, int *inv, int *vies) {
+    if (!z->actif) return;
     int c = checkCollisionZombie(p, *z);
     if (c == 1) {
         puts("Détruit les trucs");
+        z->actif = false;
         for (int i=0; i<NB_SPRITES_ZOMBIE; i++) {
             z->sprites[i] = NULL;
         }
@@ -935,8 +952,10 @@ void gereCollisionZombie(Personnage p, Zombie *z, int *inv, int *vies) {
 
 
 void gereCollisionSquelette(Personnage p, Squelette *s, int *inv, int *vies) {
+    if (!s->actif) return;
     int c = checkCollisionSquelette(p, *s);
     if (c == 1) {
+        s->actif = false;
         for (int i=0; i<NB_SPRITES_SQUELETTE; i++) {
             s->sprites[i] = NULL;
         }
