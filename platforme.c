@@ -407,7 +407,7 @@ Squelette initSqueletteVide() {
     s.frameActuelle = 0;
     s.timerAnim = 0; 
     s.regardeADroite = false;
-    for (int i = 0; i < NB_SPRITES_ZOMBIE; i++) {
+    for (int i = 0; i < NB_SPRITES_SQUELETTE; i++) {
         s.sprites[i] = NULL;
         s.largeurs[i] = 0;
         s.hauteurs[i] = 0;

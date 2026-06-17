@@ -22,7 +22,7 @@
 
 #define ETAT_GAMEOVER 2
 
-#define VIE 4
+#define VIE 2
 
 
 
@@ -134,7 +134,7 @@ void afficheEcran(Ecran e, Camera cam);
 
 void gereCollisionEcran(Personnage *perso, Ecran e, int *vy, int *jumps, int *coyote);
 
-void gereMobs(Ecran e);
+void gereMobs(Ecran *e);
 
 
 
@@ -271,10 +271,10 @@ switch (evenement)
             nv1 = initEcran1();
             nv2 = initEcran2();
 
-            DonneesImageRGB *pImageFondMenu = lisBMPRGB("images/debut1850.bmp");
+            DonneesImageRGB *pImageFondMenu = lisBMPRGB("images/background.bmp");
             if (pImageFondMenu != NULL) textureFondMenu = pImageFondMenu->donneesRGB;
             
-            DonneesImageRGB *pImgJouer = lisBMPRGB("images/jouer2.bmp");
+            DonneesImageRGB *pImgJouer = lisBMPRGB("images/jouer.bmp");
             if (pImgJouer != NULL) {
                 bJouerMenu.image = pImgJouer->donneesRGB;
                 bJouerMenu.largeur = pImgJouer->largeurImage;
@@ -283,7 +283,7 @@ switch (evenement)
                 bJouerMenu.y = HauteurFenetre / 2 -60;
             }
             
-            DonneesImageRGB *pImgLeave = lisBMPRGB("images/leave2.bmp");
+            DonneesImageRGB *pImgLeave = lisBMPRGB("images/leave.bmp");
             if (pImgLeave != NULL) {
                 bQuitterMenu.image = pImgLeave->donneesRGB;
                 bQuitterMenu.largeur = pImgLeave->largeurImage;
@@ -292,7 +292,7 @@ switch (evenement)
                 bQuitterMenu.y = HauteurFenetre / 2 - 80;
             }
 
-            DonneesImageRGB *pImageBgJeu = lisBMPRGB("images/background1850.bmp");
+            DonneesImageRGB *pImageBgJeu = lisBMPRGB("images/backgroundlevel1.bmp");
             if (pImageBgJeu != NULL) {
                 bgJeu.texture = pImageBgJeu->donneesRGB;
                 bgJeu.largeur = pImageBgJeu->largeurImage;
@@ -397,10 +397,10 @@ switch (evenement)
 
                 switch (niveauActuel) {
                     case 1:
-                        gereMobs(nv1);
+                        gereMobs(&nv1);
                         break;
                     case 2:
-                        gereMobs(nv2);
+                        gereMobs(&nv2);
                         break;
 
                 }
@@ -842,25 +842,25 @@ void afficheSquelette(Squelette s, Camera cam) {
 
 }
 
-void gereMobs(Ecran e) {
+void gereMobs(Ecran *e) {
     for (int i = 0; i<MAX_ZOMBIES; i++) {
-        e.zombies[i].pos.x += e.zombies[i].vx;
-        if (e.zombies[i].pos.x > e.zombies[i].origineX + e.zombies[i].range) { e.zombies[i].vx = -2; e.zombies[i].regardeADroite = true; }
-        else if (e.zombies[i].pos.x < e.zombies[i].origineX - e.zombies[i].range) { e.zombies[i].vx = 2; e.zombies[i].regardeADroite = false; }
-        e.zombies[i].timerAnim++;
-        if (e.zombies[i].timerAnim >= 5) {
-            e.zombies[i].frameActuelle = (e.zombies[i].frameActuelle + 1) % NB_SPRITES_ZOMBIE;
-            e.zombies[i].timerAnim = 0;
+        e->zombies[i].pos.x += e->zombies[i].vx;
+        if (e->zombies[i].pos.x > e->zombies[i].origineX + e->zombies[i].range) { e->zombies[i].vx = -2; e->zombies[i].regardeADroite = true; }
+        else if (e->zombies[i].pos.x < e->zombies[i].origineX - e->zombies[i].range) { e->zombies[i].vx = 2; e->zombies[i].regardeADroite = false; }
+        e->zombies[i].timerAnim++;
+        if (e->zombies[i].timerAnim >= 5) {
+            e->zombies[i].frameActuelle = (e->zombies[i].frameActuelle + 1) % NB_SPRITES_ZOMBIE;
+            e->zombies[i].timerAnim = 0;
         }
     }
     for (int i = 0; i<MAX_SQUELETTES; i++) {
-        e.squelettes[i].pos.x += e.squelettes[i].vx;
-        if (e.squelettes[i].pos.x > e.squelettes[i].origineX + e.squelettes[i].range) { e.squelettes[i].vx = -2; e.squelettes[i].regardeADroite = true; }
-        else if (e.squelettes[i].pos.x < e.squelettes[i].origineX - e.squelettes[i].range) { e.squelettes[i].vx = 2; e.squelettes[i].regardeADroite = false; }
-        e.squelettes[i].timerAnim++;
-        if (e.squelettes[i].timerAnim >= 5) {
-            e.squelettes[i].frameActuelle = (e.squelettes[i].frameActuelle + 1) % NB_SPRITES_SQUELETTE;
-            e.squelettes[i].timerAnim = 0;
+        e->squelettes[i].pos.x += e->squelettes[i].vx;
+        if (e->squelettes[i].pos.x > e->squelettes[i].origineX + e->squelettes[i].range) { e->squelettes[i].vx = -2; e->squelettes[i].regardeADroite = true; }
+        else if (e->squelettes[i].pos.x < e->squelettes[i].origineX - e->squelettes[i].range) { e->squelettes[i].vx = 2; e->squelettes[i].regardeADroite = false; }
+        e->squelettes[i].timerAnim++;
+        if (e->squelettes[i].timerAnim >= 5) {
+            e->squelettes[i].frameActuelle = (e->squelettes[i].frameActuelle + 1) % NB_SPRITES_SQUELETTE;
+            e->squelettes[i].timerAnim = 0;
         }
     }
 }
