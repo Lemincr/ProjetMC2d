@@ -132,7 +132,7 @@ void gereCollisionPlateforme(Personnage *perso, Plateforme plat, int *vy, int *j
 
 void afficheEcran(Ecran e, Camera cam);
 
-void gereCollisionEcran(Personnage *perso, Ecran e, int *vy, int *jumps, int *coyote);
+void gereCollisionEcran(Personnage *perso, Ecran e, int *vy, int *jumps, int *coyote, int *invincibilityFrame, int *vie);
 
 void gereMobs(Ecran *e);
 
@@ -144,7 +144,11 @@ Decoration initDecoration(int x1, int y1, int largeur, int hauteur, char *lienTe
 Decoration initDecorationVide();
 
 
+int checkCollisionZombie(Personnage p, Zombie z);
+int checkCollisionSquelette(Personnage p, Squelette s);
 
+void gereCollisionZombie(Personnage p, Zombie *z, int *inv, int *vies);
+void gereCollisionSquelette(Personnage p, Squelette *s, int *inv, int *vies);
 
 
 
@@ -246,6 +250,8 @@ static unsigned char *textureIconeEmeraude = NULL;
 
 static int coyoteFrame = 5;
 
+static int invincibilityFrame = 0;
+
 switch (evenement)
     {
         case Initialisation:
@@ -337,10 +343,10 @@ switch (evenement)
                 
                 switch (niveauActuel) {
                     case 1:
-                        gereCollisionEcran(&Player, nv1, &vyPerso, &jumps, &coyoteFrame);
+                        gereCollisionEcran(&Player, nv1, &vyPerso, &jumps, &coyoteFrame, &invincibilityFrame, &vie);
                         break;
                     case 2:
-                        gereCollisionEcran(&Player, nv2, &vyPerso, &jumps, &coyoteFrame);
+                        gereCollisionEcran(&Player, nv2, &vyPerso, &jumps, &coyoteFrame, &invincibilityFrame, &vie);
                         break;
                 }
                 Player.playerPos.y += vyPerso;
@@ -443,7 +449,9 @@ switch (evenement)
                 }
             }
 
-            
+            if (invincibilityFrame > 0) {
+                invincibilityFrame--;
+            }
 
             rafraichisFenetre();
             break;
@@ -715,12 +723,20 @@ void afficheEcran(Ecran e, Camera cam) {
 
 
 
-void gereCollisionEcran(Personnage *perso, Ecran e, int *vy, int *jumps, int *coyote) {
+void gereCollisionEcran(Personnage *perso, Ecran e, int *vy, int *jumps, int *coyote, int *invincibilityFrame, int *vie) {
 
     for (int i=0; i<MAX_PLATEFORMES; i++) {
 
         gereCollisionPlateforme(perso, e.solides[i], vy, jumps, coyote);
 
+    }
+
+    for (int i=0; i<MAX_ZOMBIES; i++) {
+        gereCollisionZombie(*perso, &(e.zombies[i]), invincibilityFrame, vie);
+    }
+
+    for (int i=0; i<MAX_SQUELETTES; i++) {
+        gereCollisionSquelette(*perso, &(e.squelettes[i]), invincibilityFrame, vie);
     }
 
 }
@@ -862,4 +878,73 @@ void gereMobs(Ecran *e) {
         }
     }
     
+}
+
+int checkCollisionZombie(Personnage p, Zombie z) {
+    if (p.playerPos.x < z.pos.x - 22) return 0;
+    if (p.playerPos.x > z.pos.x + 22) return 0;
+    if (p.playerPos.y + 32 < z.pos.y - 32) return 0;
+    puts("Pas trop bas");
+    if (p.playerPos.y < z.pos.y + 50) {
+        if (p.playerPos.y > z.pos.y) {
+            puts("Parfait!");
+            return 1;
+        }
+        else {
+            puts("??");
+            return -1;
+        }
+    }
+    return -1;
+}
+
+
+
+int checkCollisionSquelette(Personnage p, Squelette s) {
+    if (p.playerPos.x < s.pos.x - 22) return 0;
+    if (p.playerPos.x > s.pos.x + 22) return 0;
+    if (p.playerPos.y + 32 < s.pos.y - 32) return 0;
+    if (p.playerPos.y < s.pos.y + 50) {
+        if (p.playerPos.y > s.pos.y) {
+            return 1;
+        }
+        else {
+            return -1;
+        }
+    }
+    return 0;
+}
+
+void gereCollisionZombie(Personnage p, Zombie *z, int *inv, int *vies) {
+    int c = checkCollisionZombie(p, *z);
+    if (c == 1) {
+        puts("Détruit les trucs");
+        for (int i=0; i<NB_SPRITES_ZOMBIE; i++) {
+            z->sprites[i] = NULL;
+        }
+    }
+    else if (c == -1) {
+        if (*inv <= 0) {
+            (*vies)--;
+            *inv = 100;
+        }
+    }  
+}
+
+
+
+
+void gereCollisionSquelette(Personnage p, Squelette *s, int *inv, int *vies) {
+    int c = checkCollisionSquelette(p, *s);
+    if (c == 1) {
+        for (int i=0; i<NB_SPRITES_SQUELETTE; i++) {
+            s->sprites[i] = NULL;
+        }
+    }
+    else if (c == -1) {
+        if (*inv <= 0) {
+            (*vies)--;
+            *inv = 100;
+        }
+    }  
 }
