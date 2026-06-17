@@ -364,8 +364,8 @@ switch (evenement)
 
                 if (Player.playerPos.y < -100) {
                     vie--;
-                    Player.playerPos.x = LargeurFenetre/11;
-                    Player.playerPos.y = HauteurFenetre/2;
+                    Player.playerPos.x = 100;
+                    Player.playerPos.y = 300;
                 }
                 else if (vie == 0){
                     etat = ETAT_GAMEOVER;
@@ -400,6 +400,10 @@ switch (evenement)
                             if (checkCollisionEmeraude(Player, nv1.emeraudes[i]) == 1) {
                                 emeraudes++;
                                 nv1.emeraudes[i].image = NULL;
+                                if (emeraudes >= 10) {
+                                    vie++;
+                                    emeraudes = 0;
+                                }
                             }
                         }
                         break;
@@ -408,6 +412,10 @@ switch (evenement)
                             if (checkCollisionEmeraude(Player, nv2.emeraudes[i]) == 1) {
                                 emeraudes++;
                                 nv2.emeraudes[i].image = NULL;
+                                if (emeraudes >= 10) {
+                                    vie++;
+                                    emeraudes = 0;
+                                }
                             }
                         }
                     case 3:
@@ -415,6 +423,10 @@ switch (evenement)
                             if (checkCollisionEmeraude(Player, nv3.emeraudes[i]) == 1) {
                                 emeraudes++;
                                 nv3.emeraudes[i].image = NULL;
+                                if (emeraudes >= 10) {
+                                    vie++;
+                                    emeraudes = 0;
+                                }
                             }
                         }
                 }
@@ -434,7 +446,7 @@ switch (evenement)
 
                 switch (niveauActuel) {
                     case 1:
-                        if (Player.playerPos.x > 1000) { // 4200 normalement
+                        if (Player.playerPos.x > 4200) { // 4200 normalement
                             niveauActuel++;
                             Player.playerPos.x = LargeurFenetre/15;
                             Player.playerPos.y = HauteurFenetre/5;
@@ -445,7 +457,7 @@ switch (evenement)
                         }
                         break;
                     case 2:
-                        if (Player.playerPos.x > 1000) {
+                        if (Player.playerPos.x < 100 && Player.playerPos.y > 300) {
                             niveauActuel++;
                             Player.playerPos.x = LargeurFenetre/15;
                             Player.playerPos.y = HauteurFenetre/5;
