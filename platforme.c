@@ -335,7 +335,7 @@ Zombie initZombie(int x1, int y1) {
     Zombie z;
     char chemin[50];
     z.pos.x = x1;
-    z.pos.y = y1;
+    z.pos.y = y1+16;
     z.origineX = x1; 
     z.range = 200; 
     z.vx = 2;
@@ -360,7 +360,7 @@ Squelette initSquelette(int x1, int y1) {
     Squelette s;
     char chemin[50];
     s.pos.x = x1;
-    s.pos.y = y1;
+    s.pos.y = y1+16;
     s.origineX = x1; 
     s.range = 200; 
     s.vx = 2;
