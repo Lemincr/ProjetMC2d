@@ -22,7 +22,7 @@
 
 #define ETAT_GAMEOVER 2
 
-#define VIE 2
+#define VIE 4
 
 
 
@@ -132,7 +132,7 @@ void gereCollisionPlateforme(Personnage *perso, Plateforme plat, int *vy, int *j
 
 void afficheEcran(Ecran e, Camera cam);
 
-void gereCollisionEcran(Personnage *perso, Ecran e, int *vy, int *jumps, int *coyote);
+void gereCollisionEcran(Personnage *perso, Ecran *e, int *vy, int *jumps, int *coyote, int *invincibilityFrame, int *vie);
 
 void gereMobs(Ecran *e);
 
@@ -144,7 +144,11 @@ Decoration initDecoration(int x1, int y1, int largeur, int hauteur, char *lienTe
 Decoration initDecorationVide();
 
 
+int checkCollisionZombie(Personnage p, Zombie z);
+int checkCollisionSquelette(Personnage p, Squelette s);
 
+void gereCollisionZombie(Personnage p, Zombie *z, int *inv, int *vies, int *vy);
+void gereCollisionSquelette(Personnage p, Squelette *s, int *inv, int *vies, int *vy);
 
 
 
@@ -153,6 +157,7 @@ Decoration initDecorationVide();
 
 Ecran initEcran1();
 Ecran initEcran2();
+Ecran initEcran3();
 
 
 
@@ -214,6 +219,7 @@ static Personnage Player;
 
 static Ecran nv1;
 static Ecran nv2;
+static Ecran nv3;
 
 static int niveauActuel = 1;
 
@@ -246,6 +252,8 @@ static unsigned char *textureIconeEmeraude = NULL;
 
 static int coyoteFrame = 5;
 
+static int invincibilityFrame = 0;
+
 switch (evenement)
     {
         case Initialisation:
@@ -270,6 +278,7 @@ switch (evenement)
 
             nv1 = initEcran1();
             nv2 = initEcran2();
+            nv3 = initEcran3();
 
             DonneesImageRGB *pImageFondMenu = lisBMPRGB("images/background.bmp");
             if (pImageFondMenu != NULL) textureFondMenu = pImageFondMenu->donneesRGB;
@@ -329,6 +338,11 @@ switch (evenement)
                             Player.vx = 0;
                         }
                         break;
+                    case 3:
+                        if (checkCollisionEcran(PlayerColCheck, nv3) == 1) {
+                            Player.vx = 0;
+                        }
+                        break;
                 }   
                 
                 Player.playerPos.x += Player.vx;
@@ -337,18 +351,21 @@ switch (evenement)
                 
                 switch (niveauActuel) {
                     case 1:
-                        gereCollisionEcran(&Player, nv1, &vyPerso, &jumps, &coyoteFrame);
+                        gereCollisionEcran(&Player, &nv1, &vyPerso, &jumps, &coyoteFrame, &invincibilityFrame, &vie);
                         break;
                     case 2:
-                        gereCollisionEcran(&Player, nv2, &vyPerso, &jumps, &coyoteFrame);
+                        gereCollisionEcran(&Player, &nv2, &vyPerso, &jumps, &coyoteFrame, &invincibilityFrame, &vie);
+                        break;
+                    case 3:
+                        gereCollisionEcran(&Player, &nv3, &vyPerso, &jumps, &coyoteFrame, &invincibilityFrame, &vie);
                         break;
                 }
                 Player.playerPos.y += vyPerso;
 
                 if (Player.playerPos.y < -100) {
                     vie--;
-                    Player.playerPos.x = LargeurFenetre/11;
-                    Player.playerPos.y = HauteurFenetre/2;
+                    Player.playerPos.x = 100;
+                    Player.playerPos.y = 300;
                 }
                 else if (vie == 0){
                     etat = ETAT_GAMEOVER;
@@ -383,6 +400,10 @@ switch (evenement)
                             if (checkCollisionEmeraude(Player, nv1.emeraudes[i]) == 1) {
                                 emeraudes++;
                                 nv1.emeraudes[i].image = NULL;
+                                if (emeraudes >= 10) {
+                                    vie++;
+                                    emeraudes = 0;
+                                }
                             }
                         }
                         break;
@@ -391,6 +412,21 @@ switch (evenement)
                             if (checkCollisionEmeraude(Player, nv2.emeraudes[i]) == 1) {
                                 emeraudes++;
                                 nv2.emeraudes[i].image = NULL;
+                                if (emeraudes >= 10) {
+                                    vie++;
+                                    emeraudes = 0;
+                                }
+                            }
+                        }
+                    case 3:
+                        for (int i = 0; i < MAX_EMERAUDES; i++) {
+                            if (checkCollisionEmeraude(Player, nv3.emeraudes[i]) == 1) {
+                                emeraudes++;
+                                nv3.emeraudes[i].image = NULL;
+                                if (emeraudes >= 10) {
+                                    vie++;
+                                    emeraudes = 0;
+                                }
                             }
                         }
                 }
@@ -402,19 +438,18 @@ switch (evenement)
                     case 2:
                         gereMobs(&nv2);
                         break;
-
+                    case 3:
+                        gereMobs(&nv2);
+                        break;
                 }
 
 
                 switch (niveauActuel) {
                     case 1:
-                        if (Player.playerPos.x > 4200) {
-                            if (niveauActuel == 1) {
-                                niveauActuel++;
-
-                            }
-                            Player.playerPos.x = LargeurFenetre / 2;
-                            Player.playerPos.y = HauteurFenetre / 2;
+                        if (Player.playerPos.x > 4200) { // 4200 normalement
+                            niveauActuel++;
+                            Player.playerPos.x = LargeurFenetre/15;
+                            Player.playerPos.y = HauteurFenetre/5;
                             Player.vx = 0;
                             vyPerso = 0;
                             cam.x = 0;
@@ -422,12 +457,21 @@ switch (evenement)
                         }
                         break;
                     case 2:
+                        if (Player.playerPos.x < 100 && Player.playerPos.y > 300) {
+                            niveauActuel++;
+                            Player.playerPos.x = LargeurFenetre/15;
+                            Player.playerPos.y = HauteurFenetre/5;
+                            Player.vx = 0;
+                            vyPerso = 0;
+                            cam.x = 0;
+                            break; 
+                        }
+                        break;
+                    case 3:
                         if (Player.playerPos.x > 9999) {
-                            if (niveauActuel == 1) {
-                                niveauActuel++;
-                            }
-                            Player.playerPos.x = LargeurFenetre / 2;
-                            Player.playerPos.y = HauteurFenetre / 2;
+                            niveauActuel++;
+                            Player.playerPos.x = LargeurFenetre/15;
+                            Player.playerPos.y = HauteurFenetre/5;
                             Player.vx = 0;
                             vyPerso = 0;
                             cam.x = 0;
@@ -443,7 +487,9 @@ switch (evenement)
                 }
             }
 
-            
+            if (invincibilityFrame > 0) {
+                invincibilityFrame--;
+            }
 
             rafraichisFenetre();
             break;
@@ -469,6 +515,9 @@ switch (evenement)
                         break;
                     case 2:
                         afficheEcran(nv2, cam);
+                        break;
+                    case 3:
+                        afficheEcran(nv3, cam);
                         break;
                 }
                 affichePersonnage(Player, cam);
@@ -516,8 +565,8 @@ switch (evenement)
                         time = 500;
                         frameCounter = 0;
                         
-                        Player.playerPos.x = LargeurFenetre / 2;
-                        Player.playerPos.y = HauteurFenetre / 2;
+                        Player.playerPos.x = LargeurFenetre/15;
+                        Player.playerPos.y = HauteurFenetre/5;
                         vyPerso = 0;
                         Player.vx = 0;
                         
@@ -593,7 +642,7 @@ void affichePersonnage(Personnage p, Camera cam) {
 
 
 void afficheZombie(Zombie z, Camera cam) {
-
+    if (!z.actif) return;
     unsigned char *sprite = z.sprites[z.frameActuelle];
 
     int l = z.largeurs[z.frameActuelle], h = z.hauteurs[z.frameActuelle];
@@ -715,12 +764,20 @@ void afficheEcran(Ecran e, Camera cam) {
 
 
 
-void gereCollisionEcran(Personnage *perso, Ecran e, int *vy, int *jumps, int *coyote) {
+void gereCollisionEcran(Personnage *perso, Ecran *e, int *vy, int *jumps, int *coyote, int *invincibilityFrame, int *vie) {
 
     for (int i=0; i<MAX_PLATEFORMES; i++) {
 
-        gereCollisionPlateforme(perso, e.solides[i], vy, jumps, coyote);
+        gereCollisionPlateforme(perso, e->solides[i], vy, jumps, coyote);
 
+    }
+
+    for (int i=0; i<MAX_ZOMBIES; i++) {
+        gereCollisionZombie(*perso, &(e->zombies[i]), invincibilityFrame, vie, vy);
+    }
+
+    for (int i=0; i<MAX_SQUELETTES; i++) {
+        gereCollisionSquelette(*perso, &(e->squelettes[i]), invincibilityFrame, vie, vy);
     }
 
 }
@@ -835,7 +892,7 @@ int checkCollisionEmeraude(Personnage perso, Piece p) {
 }
 
 void afficheSquelette(Squelette s, Camera cam) {
-
+    if (!s.actif) return;
     unsigned char *sprite = s.sprites[s.frameActuelle];
 
     int l = s.largeurs[s.frameActuelle], h = s.hauteurs[s.frameActuelle];
@@ -852,6 +909,7 @@ void afficheSquelette(Squelette s, Camera cam) {
 
 void gereMobs(Ecran *e) {
     for (int i = 0; i<MAX_ZOMBIES; i++) {
+        if (!e->zombies[i].actif) continue;
         e->zombies[i].pos.x += e->zombies[i].vx;
         if (e->zombies[i].pos.x > e->zombies[i].origineX + e->zombies[i].range) { e->zombies[i].vx = -2; e->zombies[i].regardeADroite = true; }
         else if (e->zombies[i].pos.x < e->zombies[i].origineX - e->zombies[i].range) { e->zombies[i].vx = 2; e->zombies[i].regardeADroite = false; }
@@ -861,7 +919,9 @@ void gereMobs(Ecran *e) {
             e->zombies[i].timerAnim = 0;
         }
     }
+
     for (int i = 0; i<MAX_SQUELETTES; i++) {
+        if (!e->squelettes[i].actif) continue;
         e->squelettes[i].pos.x += e->squelettes[i].vx;
         if (e->squelettes[i].pos.x > e->squelettes[i].origineX + e->squelettes[i].range) { e->squelettes[i].vx = -2; e->squelettes[i].regardeADroite = true; }
         else if (e->squelettes[i].pos.x < e->squelettes[i].origineX - e->squelettes[i].range) { e->squelettes[i].vx = 2; e->squelettes[i].regardeADroite = false; }
@@ -871,4 +931,82 @@ void gereMobs(Ecran *e) {
             e->squelettes[i].timerAnim = 0;
         }
     }
+    
+}
+
+int checkCollisionZombie(Personnage p, Zombie z) {
+    if (!z.actif) return 0;
+    if (p.playerPos.x < z.pos.x - 22) return 0;
+    if (p.playerPos.x > z.pos.x + 22) return 0;
+    if (p.playerPos.y + 32 < z.pos.y - 33) return 0;
+    puts("Pas trop bas");
+    if (p.playerPos.y < z.pos.y + 50) {
+        if (p.playerPos.y > z.pos.y) {
+            puts("Parfait!");
+            return 1;
+        }
+        else {
+            puts("??");
+            return -1;
+        }
+    }
+    return -1;
+}
+
+
+
+int checkCollisionSquelette(Personnage p, Squelette s) {
+    if (!s.actif) return 0;
+    if (p.playerPos.x < s.pos.x - 22) return 0;
+    if (p.playerPos.x > s.pos.x + 22) return 0;
+    if (p.playerPos.y + 32 < s.pos.y - 33) return 0;
+    if (p.playerPos.y < s.pos.y + 87) {
+        if (p.playerPos.y > s.pos.y + 37) {
+            return 1;
+        }
+        else {
+            return -1;
+        }
+    }
+    return 0;
+}
+
+void gereCollisionZombie(Personnage p, Zombie *z, int *inv, int *vies, int *vy) {
+    if (!z->actif) return;
+    int c = checkCollisionZombie(p, *z);
+    if (c == 1) {
+        *vy = 10;
+        puts("Détruit les trucs");
+        z->actif = false;
+        for (int i=0; i<NB_SPRITES_ZOMBIE; i++) {
+            z->sprites[i] = NULL;
+        }
+    }
+    else if (c == -1) {
+        if (*inv <= 0) {
+            (*vies)--;
+            *inv = 100;
+        }
+    }  
+}
+
+
+
+
+void gereCollisionSquelette(Personnage p, Squelette *s, int *inv, int *vies, int *vy) {
+    if (!s->actif) return;
+    int c = checkCollisionSquelette(p, *s);
+    if (c == 1) {
+        s->actif = false;
+        for (int i=0; i<NB_SPRITES_SQUELETTE; i++) {
+            s->sprites[i] = NULL;
+        }
+    }
+    else if (c == -1) {
+        if (*inv <= 0) {
+            *vy = 10;
+            (*vies)--;
+            *inv = 100;
+        }
+    }  
 }

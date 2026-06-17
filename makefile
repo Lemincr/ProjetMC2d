@@ -1,12 +1,14 @@
-# Règle principale : compile l'exécutable "steve"
+# Règle principale : compile l'exécutable "steve" et nettoie les fichiers objets (.o) automatiquement
 main: main.o menu.o platforme.o libisentlib.a
 	gcc -Wall main.o menu.o platforme.o -o steve libisentlib.a -lm -lglut -lGL -lX11
+	rm -f main.o menu.o platforme.o BmpLib.o ErreurLib.o ESLib.o GfxLib.o OutilsLib.o SocketLib.o ThreadLib.o TortueLib.o WavLib.o
 
 main.o: main.c GfxLib.h BmpLib.h ESLib.h menu.h
 	gcc -Wall -c main.c
 
 menu.o: menu.c menu.h GfxLib.h BmpLib.h
 	gcc -Wall -c menu.c
+
 platforme.o: platforme.c platforme.h GfxLib.h BmpLib.h
 	gcc -Wall -c platforme.c
 
@@ -26,8 +28,6 @@ ErreurLib.o: ErreurLib.c ErreurLib.h
 
 GfxLib.o: GfxLib.c GfxLib.h ESLib.h
 	gcc -Wall -O2 -c GfxLib.c -I/usr/include/GL
-# Sous macOS, commenter la ligne de commande ci-dessus et dé-commenter celle ci-dessous :
-#	gcc -Wall -O2 -c GfxLib.c -Wno-deprecated-declarations
 
 OutilsLib.o: OutilsLib.c OutilsLib.h
 	gcc -Wall -O2 -c OutilsLib.c
@@ -43,14 +43,14 @@ TortueLib.o: TortueLib.c TortueLib.h GfxLib.h
 
 WavLib.o: WavLib.c WavLib.h OutilsLib.h
 	gcc -Wall -O2 -c WavLib.c -Wno-unused-result
-# Sous macOS, commenter la ligne de commande ci-dessus et dé-commenter celle ci-dessous :
-#	gcc -Wall -O2 -c WavLib.c
 
 zip:
 	zip libisentlib.zip *.[ch] *.bmp *.pdf makefile
 
+# Nettoie absolument tout SAUF l'exécutable "steve"
 clean:
-	rm -f *~ *.o
+	rm -f *~ *.o *.a
 
+# Supprime tout, y compris l'exécutable
 deepclean: clean
-	rm -f steve libisentlib.a
+	rm -f steve
