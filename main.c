@@ -439,41 +439,36 @@ switch (evenement)
                         }
                     }
             }
-            for (int i = 0; i < MAX_DECORATIONS; i++) {
-                // Le (const char *) dit au compilateur : "t'inquiète, traite ça comme du texte normal"
-                unsigned char *textureCmp = lisBMPRGB("images/obsidienne.bmp")->donneesRGB;
-                switch (niveauActuel) {
-                    case 1:
-                        if (nv1.non_solides[i].texture != NULL && strcmp((const char*)nv1.non_solides[i].texture, (const char*)textureCmp) == 0) {
-                            if (checkCollisionPortail(Player, nv1.non_solides[i]) == 1) {
-                                if (niveauActuel == 1) {
-                                    niveauActuel++;
-                                }
-                                Player.playerPos.x = LargeurFenetre / 2;
-                                Player.playerPos.y = HauteurFenetre / 2;
-                                Player.vx = 0;
-                                vyPerso = 0;
-                                cam.x = 0;
-                                break; 
-                            }
+
+                
+            switch (niveauActuel) {
+                case 1:
+                    if (Player.playerPos.x > 4200) {
+                        if (niveauActuel == 1) {
+                            niveauActuel++;
+
                         }
-                        break;
-                    case 2:
-                        if (nv2.non_solides[i].texture != NULL && strcmp((const char*)nv2.non_solides[i].texture, (const char*)textureCmp) == 0) {
-                            if (checkCollisionPortail(Player, nv2.non_solides[i]) == 1) {
-                                if (niveauActuel == 1) {
-                                    niveauActuel++;
-                                }
-                                Player.playerPos.x = LargeurFenetre / 2;
-                                Player.playerPos.y = HauteurFenetre / 2;
-                                Player.vx = 0;
-                                vyPerso = 0;
-                                cam.x = 0;
-                                break; 
-                            }
+                        Player.playerPos.x = LargeurFenetre / 2;
+                        Player.playerPos.y = HauteurFenetre / 2;
+                        Player.vx = 0;
+                        vyPerso = 0;
+                        cam.x = 0;
+                        break; 
+                    }
+                    break;
+                case 2:
+                    if (Player.playerPos.x > 9999) {
+                        if (niveauActuel == 1) {
+                            niveauActuel++;
                         }
-                        break;
-                }
+                        Player.playerPos.x = LargeurFenetre / 2;
+                        Player.playerPos.y = HauteurFenetre / 2;
+                        Player.vx = 0;
+                        vyPerso = 0;
+                        cam.x = 0;
+                        break; 
+                    }
+                    break;
             }
 
             coyoteFrame--;
@@ -866,14 +861,16 @@ int checkCollisionEmeraude(Personnage perso, Piece p) {
 int checkCollisionPortail(Personnage perso, Decoration d) {
     if (d.texture == NULL) return 0;
 
-    int lPerso = perso.largeurs[perso.frameActuelle];
-    int hPerso = perso.hauteurs[perso.frameActuelle];
-
+    printf("playerPos=(%d,%d)\n", perso.playerPos.x, perso.playerPos.y);
+    printf("portail: coinIG=(%d,%d) l=%d h=%d\n", d.coinInferieurGauche.x, d.coinInferieurGauche.y, d.largeur, d.hauteur);
     
-    if (perso.playerPos.x + lPerso/2 < d.coinInferieurGauche.x) return 0;
-    if (perso.playerPos.x - lPerso/2 > (d.coinInferieurGauche.x + d.largeur)) return 0;
-    if (perso.playerPos.y + hPerso/2 < d.coinInferieurGauche.y) return 0;
-    if (perso.playerPos.y - hPerso/2 + 2 > (d.coinInferieurGauche.y + d.hauteur)) return 0;
-
+    if (perso.playerPos.x < d.coinInferieurGauche.x) return 0;
+    puts("Pas trop gauche");
+    if (perso.playerPos.x > (d.coinInferieurGauche.x + d.largeur)) return 0;
+    puts("Pas trop droite");
+    if (perso.playerPos.y < d.coinInferieurGauche.y) return 0;
+    puts("Pas trop bas");
+    if (perso.playerPos.y > (d.coinInferieurGauche.y + d.hauteur)) return 0;
+    puts("Pas trop haut: OK!!!");
     return 1;
 }
