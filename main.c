@@ -109,7 +109,6 @@ typedef struct squelette {
 
 
 
-
 typedef struct background {
 
     unsigned char *texture;
