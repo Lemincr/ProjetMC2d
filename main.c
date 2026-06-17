@@ -105,11 +105,11 @@ typedef struct squelette {
 
     Coord pos;
 
-    unsigned char *sprites[NB_SPRITES_ZOMBIE];
+    unsigned char *sprites[NB_SPRITES_SQUELETTE];
 
-    int largeurs[NB_SPRITES_ZOMBIE];
+    int largeurs[NB_SPRITES_SQUELETTE];
 
-    int hauteurs[NB_SPRITES_ZOMBIE];
+    int hauteurs[NB_SPRITES_SQUELETTE];
 
     int frameActuelle;
 
@@ -453,6 +453,10 @@ switch (evenement)
                         if (checkCollisionEmeraude(Player, nv1.emeraudes[i]) == 1) {
                             emeraudes++;
                             nv1.emeraudes[i].image = NULL;
+                            if ( emeraudes == 10){
+                                vie ++;
+                                emeraudes = 0;
+                            }
                         }
                     }
                     break;
@@ -461,6 +465,10 @@ switch (evenement)
                         if (checkCollisionEmeraude(Player, nv2.emeraudes[i]) == 1) {
                             emeraudes++;
                             nv2.emeraudes[i].image = NULL;
+                            if ( emeraudes == 10){
+                                vie ++;
+                                emeraudes = 0;
+                            }
                         }
                     }
             }
