@@ -63,6 +63,7 @@ typedef struct zombie {
     int vx;
     int range;
     int origineX;
+    bool actif;
 } Zombie;
 
 
@@ -77,6 +78,7 @@ typedef struct squelette {
     int vx;
     int range;
     int origineX;
+    bool actif;
 } Squelette;
 
 

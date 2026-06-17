@@ -358,6 +358,7 @@ Zombie initZombie(int x1, int y1) {
     z.frameActuelle = 0;
     z.timerAnim = 0; 
     z.regardeADroite = false;
+    z.actif = true;
     for (int i = 0; i < NB_SPRITES_ZOMBIE; i++) {
         if (i == 0) sprintf(chemin, "images/zombie.bmp");
         else sprintf(chemin, "images/zombie%d.bmp", i + 1);
@@ -383,6 +384,7 @@ Squelette initSquelette(int x1, int y1) {
     s.frameActuelle = 0;
     s.timerAnim = 0; 
     s.regardeADroite = false;
+    s.actif = true;
     for (int i = 0; i < NB_SPRITES_SQUELETTE; i++) {
         if (i == 0) sprintf(chemin, "images/squelette.bmp");
         else sprintf(chemin, "images/squelette%d.bmp", i+1);
@@ -407,6 +409,7 @@ Zombie initZombieVide() {
     z.frameActuelle = 0;
     z.timerAnim = 0; 
     z.regardeADroite = false;
+    z.actif = false;
     for (int i = 0; i < NB_SPRITES_ZOMBIE; i++) {
         z.sprites[i] = NULL;
         z.largeurs[i] = 0;
@@ -425,6 +428,7 @@ Squelette initSqueletteVide() {
     s.frameActuelle = 0;
     s.timerAnim = 0; 
     s.regardeADroite = false;
+    s.actif = false;
     for (int i = 0; i < NB_SPRITES_SQUELETTE; i++) {
         s.sprites[i] = NULL;
         s.largeurs[i] = 0;
