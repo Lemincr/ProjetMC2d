@@ -20,7 +20,7 @@
 #define MAX_SQUELETTES 5
 
 #define HAUTEUR_MAP 19
-#define LARGEUR_MAP 100000
+#define LARGEUR_MAP 100005
 
 
 typedef struct coordonnees {
