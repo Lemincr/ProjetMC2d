@@ -147,8 +147,8 @@ Decoration initDecorationVide();
 int checkCollisionZombie(Personnage p, Zombie z);
 int checkCollisionSquelette(Personnage p, Squelette s);
 
-void gereCollisionZombie(Personnage p, Zombie *z, int *inv, int *vies);
-void gereCollisionSquelette(Personnage p, Squelette *s, int *inv, int *vies);
+void gereCollisionZombie(Personnage p, Zombie *z, int *inv, int *vies, int *vy);
+void gereCollisionSquelette(Personnage p, Squelette *s, int *inv, int *vies, int *vy);
 
 
 
@@ -732,11 +732,11 @@ void gereCollisionEcran(Personnage *perso, Ecran *e, int *vy, int *jumps, int *c
     }
 
     for (int i=0; i<MAX_ZOMBIES; i++) {
-        gereCollisionZombie(*perso, &(e->zombies[i]), invincibilityFrame, vie);
+        gereCollisionZombie(*perso, &(e->zombies[i]), invincibilityFrame, vie, vy);
     }
 
     for (int i=0; i<MAX_SQUELETTES; i++) {
-        gereCollisionSquelette(*perso, &(e->squelettes[i]), invincibilityFrame, vie);
+        gereCollisionSquelette(*perso, &(e->squelettes[i]), invincibilityFrame, vie, vy);
     }
 
 }
@@ -897,7 +897,7 @@ int checkCollisionZombie(Personnage p, Zombie z) {
     if (!z.actif) return 0;
     if (p.playerPos.x < z.pos.x - 22) return 0;
     if (p.playerPos.x > z.pos.x + 22) return 0;
-    if (p.playerPos.y + 32 < z.pos.y - 32) return 0;
+    if (p.playerPos.y + 32 < z.pos.y - 33) return 0;
     puts("Pas trop bas");
     if (p.playerPos.y < z.pos.y + 50) {
         if (p.playerPos.y > z.pos.y) {
@@ -918,9 +918,9 @@ int checkCollisionSquelette(Personnage p, Squelette s) {
     if (!s.actif) return 0;
     if (p.playerPos.x < s.pos.x - 22) return 0;
     if (p.playerPos.x > s.pos.x + 22) return 0;
-    if (p.playerPos.y + 32 < s.pos.y - 32) return 0;
-    if (p.playerPos.y < s.pos.y + 50) {
-        if (p.playerPos.y > s.pos.y) {
+    if (p.playerPos.y + 32 < s.pos.y - 33) return 0;
+    if (p.playerPos.y < s.pos.y + 87) {
+        if (p.playerPos.y > s.pos.y + 37) {
             return 1;
         }
         else {
@@ -930,10 +930,11 @@ int checkCollisionSquelette(Personnage p, Squelette s) {
     return 0;
 }
 
-void gereCollisionZombie(Personnage p, Zombie *z, int *inv, int *vies) {
+void gereCollisionZombie(Personnage p, Zombie *z, int *inv, int *vies, int *vy) {
     if (!z->actif) return;
     int c = checkCollisionZombie(p, *z);
     if (c == 1) {
+        *vy = 10;
         puts("Détruit les trucs");
         z->actif = false;
         for (int i=0; i<NB_SPRITES_ZOMBIE; i++) {
@@ -951,7 +952,7 @@ void gereCollisionZombie(Personnage p, Zombie *z, int *inv, int *vies) {
 
 
 
-void gereCollisionSquelette(Personnage p, Squelette *s, int *inv, int *vies) {
+void gereCollisionSquelette(Personnage p, Squelette *s, int *inv, int *vies, int *vy) {
     if (!s->actif) return;
     int c = checkCollisionSquelette(p, *s);
     if (c == 1) {
@@ -962,6 +963,7 @@ void gereCollisionSquelette(Personnage p, Squelette *s, int *inv, int *vies) {
     }
     else if (c == -1) {
         if (*inv <= 0) {
+            *vy = 10;
             (*vies)--;
             *inv = 100;
         }
