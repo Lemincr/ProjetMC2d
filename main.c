@@ -157,6 +157,7 @@ void gereCollisionSquelette(Personnage p, Squelette *s, int *inv, int *vies, int
 
 Ecran initEcran1();
 Ecran initEcran2();
+Ecran initEcran3();
 
 
 
@@ -218,6 +219,7 @@ static Personnage Player;
 
 static Ecran nv1;
 static Ecran nv2;
+static Ecran nv3;
 
 static int niveauActuel = 1;
 
@@ -276,6 +278,7 @@ switch (evenement)
 
             nv1 = initEcran1();
             nv2 = initEcran2();
+            nv3 = initEcran3();
 
             DonneesImageRGB *pImageFondMenu = lisBMPRGB("images/background.bmp");
             if (pImageFondMenu != NULL) textureFondMenu = pImageFondMenu->donneesRGB;
@@ -335,6 +338,11 @@ switch (evenement)
                             Player.vx = 0;
                         }
                         break;
+                    case 3:
+                        if (checkCollisionEcran(PlayerColCheck, nv3) == 1) {
+                            Player.vx = 0;
+                        }
+                        break;
                 }   
                 
                 Player.playerPos.x += Player.vx;
@@ -347,6 +355,9 @@ switch (evenement)
                         break;
                     case 2:
                         gereCollisionEcran(&Player, &nv2, &vyPerso, &jumps, &coyoteFrame, &invincibilityFrame, &vie);
+                        break;
+                    case 3:
+                        gereCollisionEcran(&Player, &nv3, &vyPerso, &jumps, &coyoteFrame, &invincibilityFrame, &vie);
                         break;
                 }
                 Player.playerPos.y += vyPerso;
@@ -399,6 +410,13 @@ switch (evenement)
                                 nv2.emeraudes[i].image = NULL;
                             }
                         }
+                    case 3:
+                        for (int i = 0; i < MAX_EMERAUDES; i++) {
+                            if (checkCollisionEmeraude(Player, nv3.emeraudes[i]) == 1) {
+                                emeraudes++;
+                                nv3.emeraudes[i].image = NULL;
+                            }
+                        }
                 }
 
                 switch (niveauActuel) {
@@ -408,17 +426,16 @@ switch (evenement)
                     case 2:
                         gereMobs(&nv2);
                         break;
-
+                    case 3:
+                        gereMobs(&nv2);
+                        break;
                 }
 
 
                 switch (niveauActuel) {
                     case 1:
-                        if (Player.playerPos.x > 4200) {
-                            if (niveauActuel == 1) {
-                                niveauActuel++;
-
-                            }
+                        if (Player.playerPos.x > 1000) { // 4200 normalement
+                            niveauActuel++;
                             Player.playerPos.x = LargeurFenetre/15;
                             Player.playerPos.y = HauteurFenetre/5;
                             Player.vx = 0;
@@ -428,10 +445,19 @@ switch (evenement)
                         }
                         break;
                     case 2:
+                        if (Player.playerPos.x > 1000) {
+                            niveauActuel++;
+                            Player.playerPos.x = LargeurFenetre/15;
+                            Player.playerPos.y = HauteurFenetre/5;
+                            Player.vx = 0;
+                            vyPerso = 0;
+                            cam.x = 0;
+                            break; 
+                        }
+                        break;
+                    case 3:
                         if (Player.playerPos.x > 9999) {
-                            if (niveauActuel == 1) {
-                                niveauActuel++;
-                            }
+                            niveauActuel++;
                             Player.playerPos.x = LargeurFenetre/15;
                             Player.playerPos.y = HauteurFenetre/5;
                             Player.vx = 0;
@@ -477,6 +503,9 @@ switch (evenement)
                         break;
                     case 2:
                         afficheEcran(nv2, cam);
+                        break;
+                    case 3:
+                        afficheEcran(nv3, cam);
                         break;
                 }
                 affichePersonnage(Player, cam);

@@ -20,7 +20,7 @@
 #define MAX_SQUELETTES 5
 
 #define HAUTEUR_MAP 19
-#define LARGEUR_MAP 100005
+#define LARGEUR_MAP 100100
 
 
 typedef struct coordonnees {
@@ -90,6 +90,7 @@ typedef struct ecran {
 	Squelette squelettes[MAX_SQUELETTES];
 } Ecran;
 Ecran initEcran1();
+Ecran initEcran3();
 Plateforme initPlateforme(int x1, int y1, int larg, int haut, char *lienTexture);
 Plateforme initPlateformeVide();
 Decoration initDecoration(int x1, int y1, int largeur, int hauteur, char *lienTexture);
