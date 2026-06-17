@@ -68,9 +68,9 @@ typedef struct zombie {
 
 typedef struct squelette {
     Coord pos;
-    unsigned char *sprites[NB_SPRITES_ZOMBIE];
-    int largeurs[NB_SPRITES_ZOMBIE];
-    int hauteurs[NB_SPRITES_ZOMBIE];
+    unsigned char *sprites[NB_SPRITES_SQUELETTE];
+    int largeurs[NB_SPRITES_SQUELETTE];
+    int hauteurs[NB_SPRITES_SQUELETTE];
     int frameActuelle;
     int timerAnim;
     bool regardeADroite;
