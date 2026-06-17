@@ -12,9 +12,12 @@
 #define COTE_PLATEFORME 32
 #define NB_SPRITES_MARCHE 5
 #define NB_SPRITES_SQUELETTE 4
+#define NB_SPRITES_ZOMBIE 3
 #define MAX_PLATEFORMES 2000
 #define MAX_DECORATIONS 100
 #define MAX_EMERAUDES 100
+#define MAX_ZOMBIES 5
+#define MAX_SQUELETTES 5
 
 #define HAUTEUR_MAP 19
 #define LARGEUR_MAP 100000
@@ -49,11 +52,40 @@ typedef struct piece {
 	unsigned char *image;
 } Piece;
 
+typedef struct zombie {
+    Coord pos;
+    unsigned char *sprites[NB_SPRITES_ZOMBIE];
+    int largeurs[NB_SPRITES_ZOMBIE];
+    int hauteurs[NB_SPRITES_ZOMBIE];
+    int frameActuelle;
+    int timerAnim;
+    bool regardeADroite;
+    int vx;
+    int range;
+    int origineX;
+} Zombie;
+
+
+typedef struct squelette {
+    Coord pos;
+    unsigned char *sprites[NB_SPRITES_SQUELETTE];
+    int largeurs[NB_SPRITES_SQUELETTE];
+    int hauteurs[NB_SPRITES_SQUELETTE];
+    int frameActuelle;
+    int timerAnim;
+    bool regardeADroite;
+    int vx;
+    int range;
+    int origineX;
+} Squelette;
+
 
 typedef struct ecran {
 	Plateforme solides[MAX_PLATEFORMES];
 	Decoration non_solides[MAX_DECORATIONS];
 	Piece emeraudes[MAX_EMERAUDES];
+	Zombie zombies[MAX_ZOMBIES];
+	Squelette squelettes[MAX_SQUELETTES];
 } Ecran;
 Ecran initEcran1();
 Plateforme initPlateforme(int x1, int y1, int larg, int haut, char *lienTexture);
@@ -65,3 +97,7 @@ Piece initPiece(int x1, int y1, char *lienTexture);
 void affichePiece(Piece p, Camera cam);
 Piece initPieceVide();
 void ecrisImageInversee(int x, int y, int largeur, int hauteur, const unsigned char *donnees);
+Zombie initZombie(int x1, int y1);
+Squelette initSquelette(int x1, int y1);
+Zombie initZombieVide();
+Squelette initSqueletteVide();
