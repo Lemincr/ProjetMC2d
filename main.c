@@ -18,11 +18,7 @@
 
 
 
-// Largeur et hauteur par defaut d'une image correspondant a nos criteres
-
-#define LargeurFenetre 800
-
-#define HauteurFenetre 600
+// Largeur et hauteur de fenetre : definies une seule fois dans platforme.h
 
 #define ETAT_GAMEOVER 2
 
@@ -443,41 +439,34 @@ switch (evenement)
                         }
                     }
             }
-            for (int i = 0; i < MAX_DECORATIONS; i++) {
-                // Le (const char *) dit au compilateur : "t'inquiète, traite ça comme du texte normal"
-                unsigned char *textureCmp = lisBMPRGB("images/obsidienne.bmp")->donneesRGB;
-                switch (niveauActuel) {
-                    case 1:
-                        if (nv1.non_solides[i].texture != NULL && strcmp((const char*)nv1.non_solides[i].texture, (const char*)textureCmp) == 0) {
-                            if (checkCollisionPortail(Player, nv1.non_solides[i]) == 1) {
-                                if (niveauActuel == 1) {
-                                    niveauActuel++;
-                                }
-                                Player.playerPos.x = LargeurFenetre / 2;
-                                Player.playerPos.y = HauteurFenetre / 2;
-                                Player.vx = 0;
-                                vyPerso = 0;
-                                cam.x = 0;
-                                break; 
-                            }
+                
+            switch (niveauActuel) {
+                case 1:
+                    if (Player.playerPos.x > 4200) {
+                        if (niveauActuel == 1) {
+                            niveauActuel++;
                         }
-                        break;
-                    case 2:
-                        if (nv2.non_solides[i].texture != NULL && strcmp((const char*)nv2.non_solides[i].texture, (const char*)textureCmp) == 0) {
-                            if (checkCollisionPortail(Player, nv2.non_solides[i]) == 1) {
-                                if (niveauActuel == 1) {
-                                    niveauActuel++;
-                                }
-                                Player.playerPos.x = LargeurFenetre / 2;
-                                Player.playerPos.y = HauteurFenetre / 2;
-                                Player.vx = 0;
-                                vyPerso = 0;
-                                cam.x = 0;
-                                break; 
-                            }
+                        Player.playerPos.x = LargeurFenetre / 2;
+                        Player.playerPos.y = HauteurFenetre / 2;
+                        Player.vx = 0;
+                        vyPerso = 0;
+                        cam.x = 0;
+                        break; 
+                    }
+                    break;
+                case 2:
+                    if (Player.playerPos.x > 9999) {
+                        if (niveauActuel == 1) {
+                            niveauActuel++;
                         }
-                        break;
-                }
+                        Player.playerPos.x = LargeurFenetre / 2;
+                        Player.playerPos.y = HauteurFenetre / 2;
+                        Player.vx = 0;
+                        vyPerso = 0;
+                        cam.x = 0;
+                        break; 
+                    }
+                    break;
             }
 
             coyoteFrame--;
@@ -507,10 +496,10 @@ switch (evenement)
                 afficheZombie(mob1, cam);
                 affichePersonnage(Player, cam);
                 
-                afficheChaine(chrono, 24, 30, 550);
+                afficheChaine(chrono, 24, 30, 830);
                 
-                int emeraudeX = 30; 
-                int emeraudeY = 500; 
+                int emeraudeX = 100; 
+                int emeraudeY = 825; 
 
                 if (textureIconeEmeraude != NULL) {
                     ecrisImageTransparente(emeraudeX, emeraudeY, COTE_PLATEFORME, COTE_PLATEFORME, textureIconeEmeraude);
@@ -522,8 +511,8 @@ switch (evenement)
 
                 if (textureCoeur != NULL) {
                     for (int i = 0; i < vie; i++) {
-                        int posX = (LargeurFenetre - 60) - (i * 40); 
-                        int posY = HauteurFenetre - 50; 
+                        int posX = (1800) - (i * 40); 
+                        int posY = 820; 
                         ecrisImageTransparente(posX, posY, largeurCoeur, hauteurCoeur, textureCoeur);
                     }
                 } 
@@ -863,14 +852,16 @@ int checkCollisionEmeraude(Personnage perso, Piece p) {
 int checkCollisionPortail(Personnage perso, Decoration d) {
     if (d.texture == NULL) return 0;
 
-    int lPerso = perso.largeurs[perso.frameActuelle];
-    int hPerso = perso.hauteurs[perso.frameActuelle];
-
+    printf("playerPos=(%d,%d)\n", perso.playerPos.x, perso.playerPos.y);
+    printf("portail: coinIG=(%d,%d) l=%d h=%d\n", d.coinInferieurGauche.x, d.coinInferieurGauche.y, d.largeur, d.hauteur);
     
-    if (perso.playerPos.x + lPerso/2 < d.coinInferieurGauche.x) return 0;
-    if (perso.playerPos.x - lPerso/2 > (d.coinInferieurGauche.x + d.largeur)) return 0;
-    if (perso.playerPos.y + hPerso/2 < d.coinInferieurGauche.y) return 0;
-    if (perso.playerPos.y - hPerso/2 + 2 > (d.coinInferieurGauche.y + d.hauteur)) return 0;
-
+    if (perso.playerPos.x < d.coinInferieurGauche.x) return 0;
+    puts("Pas trop gauche");
+    if (perso.playerPos.x > (d.coinInferieurGauche.x + d.largeur)) return 0;
+    puts("Pas trop droite");
+    if (perso.playerPos.y < d.coinInferieurGauche.y) return 0;
+    puts("Pas trop bas");
+    if (perso.playerPos.y > (d.coinInferieurGauche.y + d.hauteur)) return 0;
+    puts("Pas trop haut: OK!!!");
     return 1;
 }
