@@ -6,8 +6,8 @@
 #include "ESLib.h" // Pour utiliser valeurAleatoire()
 #include <string.h>
 
-#define LargeurFenetre 800
-#define HauteurFenetre 600
+#define LargeurFenetre 1850
+#define HauteurFenetre 891
 
 #define COTE_PLATEFORME 32
 #define NB_SPRITES_MARCHE 5

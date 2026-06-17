@@ -18,11 +18,7 @@
 
 
 
-// Largeur et hauteur par defaut d'une image correspondant a nos criteres
-
-#define LargeurFenetre 800
-
-#define HauteurFenetre 600
+// Largeur et hauteur de fenetre : definies une seule fois dans platforme.h
 
 #define ETAT_GAMEOVER 2
 
@@ -275,8 +271,8 @@ static int coyoteFrame = 5;
 switch (evenement)
     {
         case Initialisation:
-            Player.playerPos.x = LargeurFenetre/6.8;
-            Player.playerPos.y = HauteurFenetre/2;
+            Player.playerPos.x = LargeurFenetre/15;
+            Player.playerPos.y = HauteurFenetre/5;
             Player.frameActuelle = 0;
             Player.timerAnim = 0;
             Player.regardeADroite = true;
@@ -386,7 +382,7 @@ switch (evenement)
 
                 if (Player.playerPos.y < -100) {
                     vie--;
-                    Player.playerPos.x = LargeurFenetre/2;
+                    Player.playerPos.x = LargeurFenetre/11;
                     Player.playerPos.y = HauteurFenetre/2;
                 }
                 else if (vie == 0){
@@ -424,7 +420,7 @@ switch (evenement)
             sprintf(chrono, "%d", time);
 
             if (time <= 0) {
-                termineBoucleEvenements();
+                etat = ETAT_GAMEOVER;
             }
             switch (niveauActuel) {
                 case 1:
@@ -445,7 +441,7 @@ switch (evenement)
             }
             for (int i = 0; i < MAX_DECORATIONS; i++) {
                 // Le (const char *) dit au compilateur : "t'inquiète, traite ça comme du texte normal"
-                unsigned char *textureCmp = lisBMPRGB("images/short_grass.bmp")->donneesRGB;
+                unsigned char *textureCmp = lisBMPRGB("images/obsidienne.bmp")->donneesRGB;
                 switch (niveauActuel) {
                     case 1:
                         if (nv1.non_solides[i].texture != NULL && strcmp((const char*)nv1.non_solides[i].texture, (const char*)textureCmp) == 0) {
@@ -514,10 +510,10 @@ switch (evenement)
                 afficheSquelette(mob1, cam);
                 affichePersonnage(Player, cam);
                 
-                afficheChaine(chrono, 24, 30, 550);
+                afficheChaine(chrono, 24, 30, 830);
                 
-                int emeraudeX = 30; 
-                int emeraudeY = 500; 
+                int emeraudeX = 100; 
+                int emeraudeY = 825; 
 
                 if (textureIconeEmeraude != NULL) {
                     ecrisImageTransparente(emeraudeX, emeraudeY, COTE_PLATEFORME, COTE_PLATEFORME, textureIconeEmeraude);
@@ -529,8 +525,8 @@ switch (evenement)
 
                 if (textureCoeur != NULL) {
                     for (int i = 0; i < vie; i++) {
-                        int posX = (LargeurFenetre - 60) - (i * 40); 
-                        int posY = HauteurFenetre - 50; 
+                        int posX = (1800) - (i * 40); 
+                        int posY = 820; 
                         ecrisImageTransparente(posX, posY, largeurCoeur, hauteurCoeur, textureCoeur);
                     }
                 } 
