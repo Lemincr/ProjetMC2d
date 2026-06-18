@@ -10,9 +10,11 @@
 #define HauteurFenetre 891
 
 #define COTE_PLATEFORME 32
+
 #define NB_SPRITES_MARCHE 5
 #define NB_SPRITES_SQUELETTE 4
 #define NB_SPRITES_ZOMBIE 3
+
 #define MAX_PLATEFORMES 2000
 #define MAX_DECORATIONS 100
 #define MAX_EMERAUDES 100
@@ -32,6 +34,31 @@ typedef struct camera {
     int x;
 	int y;
 } Camera;
+
+
+typedef struct personnage {
+	Coord playerPos;
+	unsigned char *sprites[NB_SPRITES_MARCHE];
+    int largeurs[NB_SPRITES_MARCHE];
+    int hauteurs[NB_SPRITES_MARCHE];
+    int frameActuelle;
+    int timerAnim;
+    bool regardeADroite;
+    int vx;
+} Personnage;
+
+
+typedef struct background {
+    unsigned char *texture;
+    int largeur;
+    int hauteur;
+} Background;
+
+typedef struct imageNiveau {
+    unsigned char *texture;
+    int largeur;
+    int hauteur;
+} ImageNiveau;
 
 typedef struct plateforme {
 	Coord coinInferieurGauche;
@@ -89,18 +116,48 @@ typedef struct ecran {
 	Zombie zombies[MAX_ZOMBIES];
 	Squelette squelettes[MAX_SQUELETTES];
 } Ecran;
+
 Ecran initEcran1();
+Ecran initEcran2();
 Ecran initEcran3();
+
 Plateforme initPlateforme(int x1, int y1, int larg, int haut, char *lienTexture);
 Plateforme initPlateformeVide();
+
 Decoration initDecoration(int x1, int y1, int largeur, int hauteur, char *lienTexture);
 Decoration initDecorationVide();
 
 Piece initPiece(int x1, int y1, char *lienTexture);
-void affichePiece(Piece p, Camera cam);
 Piece initPieceVide();
-void ecrisImageInversee(int x, int y, int largeur, int hauteur, const unsigned char *donnees);
+
 Zombie initZombie(int x1, int y1);
-Squelette initSquelette(int x1, int y1);
 Zombie initZombieVide();
+
+Squelette initSquelette(int x1, int y1);
 Squelette initSqueletteVide();
+
+void ecrisImageInversee(int x, int y, int largeur, int hauteur, const unsigned char *donnees);
+void enleveContourRose(unsigned char *donnees, int largeur, int hauteur);
+
+void affichePersonnage(Personnage p, Camera cam);
+void affichePlateforme(Plateforme p, Camera cam);
+void afficheDecoration(Decoration d, Camera cam);
+void affichePiece(Piece p, Camera cam);
+void afficheZombie(Zombie z, Camera cam);
+void afficheSquelette(Squelette s, Camera cam);
+void afficheBackground(Background bg, Camera cam);
+void afficheImageNiveau(ImageNiveau image);
+void afficheEcran(Ecran e, Camera cam);
+
+int checkCollision(Personnage perso, Plateforme plat);
+int checkCollisionEmeraude(Personnage perso, Piece p);
+int checkCollisionZombie(Personnage p, Zombie z);
+int checkCollisionSquelette(Personnage p, Squelette s);
+int checkCollisionEcran(Personnage perso, Ecran e);
+
+void gereCollisionPlateforme(Personnage *perso, Plateforme plat, int *vy, int *jumps, int *coyote);
+void gereCollisionZombie(Personnage p, Zombie *z, int *inv, int *vies, int *vy);
+void gereCollisionSquelette(Personnage p, Squelette *s, int *inv, int *vies, int *vy);
+void gereCollisionEcran(Personnage *perso, Ecran *e, int *vy, int *jumps, int *coyote, int *invincibilityFrame, int *vie);
+
+void gereMobs(Ecran *e);
