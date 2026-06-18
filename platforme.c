@@ -26,7 +26,7 @@
 
 
 
-
+// ECRANS (niveaux)
 Ecran initEcran1() {
 	Ecran e;
 	int indexSolides = 0;
@@ -494,6 +494,8 @@ Ecran initEcran3() {
     return e; 
 }
 
+
+// INITIALISATION DES STRUCTURES
 Plateforme initPlateforme(int x1, int y1, int larg, int haut, char *lienTexture) {
 	Plateforme p; 
 	p.coinInferieurGauche.x = x1; 
@@ -656,6 +658,7 @@ Squelette initSqueletteVide() {
     return s;
 }
 
+// affiche l'image correspondant à la variable donnees mais inversée horizontalement
 void ecrisImageInversee(int x, int y, int largeur, int hauteur, const unsigned char *donnees) {
     unsigned char *pixels = (unsigned char*)malloc(largeur * hauteur * 4);
     if (pixels == NULL) return;
@@ -674,6 +677,7 @@ void ecrisImageInversee(int x, int y, int largeur, int hauteur, const unsigned c
     free(pixels);
 }
 
+// rend une image composé de magenta (#FF00FF) en une image transparente où le magenta est ignoré
 void enleveContourRose(unsigned char *donnees, int largeur, int hauteur) {
     if (donnees == NULL) {
     	return;
@@ -692,6 +696,7 @@ void enleveContourRose(unsigned char *donnees, int largeur, int hauteur) {
 
 }
 
+// AFFICHAGE
 void affichePersonnage(Personnage p, Camera cam) {
     unsigned char *sprite = p.sprites[p.frameActuelle];
     int l = p.largeurs[p.frameActuelle];
@@ -815,6 +820,7 @@ void afficheEcran(Ecran e, Camera cam) {
     }
 }
 
+// COLLISION
 int checkCollision(Personnage perso, Plateforme plat) {
     int l = perso.largeurs[0], h = perso.hauteurs[0];
 	if (perso.playerPos.x + l/4 < plat.coinInferieurGauche.x) {
@@ -1019,6 +1025,7 @@ void gereCollisionEcran(Personnage *perso, Ecran *e, int *vy, int *jumps, int *c
     }
 }
 
+// LOGIQUE DES MONSTRES
 void gereMobs(Ecran *e, Personnage p) {
     for (int i = 0; i<MAX_ZOMBIES; i++) {
         if (!e->zombies[i].actif) continue;

@@ -71,6 +71,8 @@ static int invincibilityFrame = 0;
 switch (evenement)
     {
         case Initialisation:
+
+            // initialisation du joueur
             Player.playerPos.x = LargeurFenetre/15;
             Player.playerPos.y = HauteurFenetre/5;
             Player.frameActuelle = 0;
@@ -78,6 +80,7 @@ switch (evenement)
             Player.regardeADroite = true;
             Player.vx = 0;
 
+            // sprites du joueur
             char chemin[50];
             for (int i = 0; i < NB_SPRITES_MARCHE; i++) {
                 if (i == 0) sprintf(chemin, "images/steve.bmp");
@@ -90,15 +93,19 @@ switch (evenement)
                 }
             }
 
+
+            // initialisation des écrans (niveaux)
             nv1 = initEcran1();
             nv2 = initEcran2();
             nv3 = initEcran3();
 
+            // image de fond de l'écran d'accueil
             DonneesImageRGB *pImageFondMenu = lisBMPRGB("images/debut1850.bmp");
             if (pImageFondMenu != NULL) {
                 textureFondMenu = pImageFondMenu->donneesRGB;
             }
             
+            // images des boutons de l'écran d'accueil
             DonneesImageRGB *pImgJouer = lisBMPRGB("images/jouer2.bmp");
             if (pImgJouer != NULL) {
                 bJouerMenu.image = pImgJouer->donneesRGB;
@@ -117,6 +124,7 @@ switch (evenement)
                 bQuitterMenu.y = HauteurFenetre / 2 - 80;
             }
 
+            // image de fond du jeu
             DonneesImageRGB *pImageBgJeu = lisBMPRGB("images/background1850.bmp");
             if (pImageBgJeu != NULL) {
                 bgJeu.texture = pImageBgJeu->donneesRGB;
@@ -124,6 +132,7 @@ switch (evenement)
                 bgJeu.hauteur = pImageBgJeu->hauteurImage;
             }
 
+            // écran de fin
             DonneesImageRGB *pImageFin = lisBMPRGB("images/End-screen.bmp");
             if (pImageFin != NULL) {
                 bgFin.texture = pImageFin->donneesRGB;
@@ -131,6 +140,7 @@ switch (evenement)
                 bgFin.hauteur = pImageFin->hauteurImage;
             }
             
+            // banderoles du niveau actuel
             char cheminImageNiveau[50];
             for (int i = 0; i < 3; i++) {
                 sprintf(cheminImageNiveau, "images/niveau%d.bmp", i + 1);
@@ -146,12 +156,15 @@ switch (evenement)
                 }
             }
 
+            // image des vies du joueur
             DonneesImageRGB *pImgCoeur = lisBMPRGB("images/heart.bmp"); 
             if (pImgCoeur != NULL) {
                 textureCoeur = pImgCoeur->donneesRGB;
                 largeurCoeur = pImgCoeur->largeurImage;
                 hauteurCoeur = pImgCoeur->hauteurImage;
             }
+
+            // image des pieces du niveau
             DonneesImageRGB *pImgIcone = lisBMPRGB("images/emerald.bmp");
             if (pImgIcone != NULL) {
                 textureIconeEmeraude = pImgIcone->donneesRGB;
@@ -162,10 +175,11 @@ switch (evenement)
 
         case Temporisation:
             if (etat == ETAT_JEU) {
+
+                // collision avec les murs
                 Personnage PlayerColCheck = Player;
                 PlayerColCheck.playerPos.x = Player.playerPos.x + Player.vx;
                 PlayerColCheck.playerPos.y = Player.playerPos.y + 10;
-                
                 switch (niveauActuel) {
                     case 1:
                         if (checkCollisionEcran(PlayerColCheck, nv1) == 1) {
@@ -183,12 +197,15 @@ switch (evenement)
                         }
                         break;
                 }   
-                
+
+                // déplacement horizontal
                 Player.playerPos.x += Player.vx;
 
+                // gravité et déplacement vertical
                 vyPerso -= 1;
                 Player.playerPos.y += vyPerso;
                 
+                // collision avec les plateformes
                 switch (niveauActuel) {
                     case 1:
                         gereCollisionEcran(&Player, &nv1, &vyPerso, &jumps, &coyoteFrame, &invincibilityFrame, &vie);
@@ -201,6 +218,7 @@ switch (evenement)
                         break;
                 }
 
+                // tomber dans le vide
                 if (Player.playerPos.y < -100) {
                     vie--;
                     Player.playerPos.x = 100;
@@ -210,6 +228,7 @@ switch (evenement)
                     etat = ETAT_GAMEOVER;
                 }
 
+                // animation du joueur
                 if (Player.vx != 0) {
                     Player.timerAnim++;
                     if (Player.timerAnim >= 5) {
@@ -220,9 +239,11 @@ switch (evenement)
                     Player.frameActuelle = 0;
                 }
                 
+                // déplacement de la caméra
                 cam.x = Player.playerPos.x - LargeurFenetre / 2;
                 if (cam.x < 0) cam.x = 0;
 
+                // minuteur en haut à gauche de l'écran
                 frameCounter++;
                 if (frameCounter >= 50) {
                     time--;
@@ -230,13 +251,17 @@ switch (evenement)
                 }
                 sprintf(chrono, "%d", time);
 
+                // plus de temps restant
                 if (time <= 0) {
                     etat = ETAT_GAMEOVER;
                 }
+
+                // logique de l'invicibilité de la nether star
                 if (Player.starTimer > 0) {
                     Player.starTimer--;
                 }
 
+                // ramassage des éméraudes
                 switch (niveauActuel) {
                     case 1:
                         for (int i = 0; i < MAX_EMERAUDES; i++) {
@@ -282,6 +307,7 @@ switch (evenement)
                         break;
                 }
 
+                // logique des monstres
                 switch (niveauActuel) {
                     case 1:
                         gereMobs(&nv1, Player);
@@ -294,10 +320,10 @@ switch (evenement)
                         break;
                 }
 
-
+                // conditions de fin
                 switch (niveauActuel) {
                     case 1:
-                        if (Player.playerPos.x > 4200) { // 4200 normalement
+                        if (Player.playerPos.x > 4200) {
                             niveauActuel++;
                             Player.playerPos.x = LargeurFenetre/15;
                             Player.playerPos.y = HauteurFenetre/5;
@@ -343,6 +369,7 @@ switch (evenement)
                         break;
                 }
 
+                // coyote time (pouvoir sauter après avoir quitté une plateforme pendant peu de temps)
                 coyoteFrame--;
 
                 if (coyoteFrame <= 0) {
@@ -350,6 +377,7 @@ switch (evenement)
                 }
             }
 
+            // invincibilité (après s'être blessé d'un monstre)
             if (invincibilityFrame > 0) {
                 invincibilityFrame--;
             }
@@ -359,9 +387,13 @@ switch (evenement)
 
         case Affichage:
             effaceFenetre(255, 255, 255);
+
+            // menu
             if (etat == ETAT_MENU) {
                 afficheMenu(LargeurFenetre, HauteurFenetre, textureFondMenu, bJouerMenu, bQuitterMenu);
             }
+
+            // fin de partie
             else if (etat == ETAT_GAMEOVER) {
                 effaceFenetre(0, 0, 0); 
                 couleurCourante(255, 0, 0); 
@@ -369,12 +401,18 @@ switch (evenement)
                 couleurCourante(255, 255, 255);
                 afficheChaine("Appuyez sur R pour revivre ou ECHAP pour quitter", 18, LargeurFenetre / 2 - 200, HauteurFenetre / 2 - 40);
             }
+
+            // fin du jeu
             else if (etat == ETAT_FIN) {
                 afficheBackground(bgFin, cam);
             }
+
+            // déroulement normal
             else {
+                // fond
                 afficheBackground(bgJeu, cam);
                 
+                // affichage du niveau actuel
                 switch (niveauActuel) {
                     case 1:
                         afficheEcran(nv1, cam);
@@ -386,12 +424,19 @@ switch (evenement)
                         afficheEcran(nv3, cam);
                         break;
                 }
+
+                // personnage
                 affichePersonnage(Player, cam);
+
+                // banderoles du niveau actuel
                 if (niveauActuel >= 1 && niveauActuel <= 3) {
                     afficheImageNiveau(imagesNiveaux[niveauActuel - 1]);
                 }
+
+                //chrono
                 afficheChaine(chrono, 24, 30, 830);
                 
+                // émeraude
                 int emeraudeX = 100; 
                 int emeraudeY = 825; 
 
@@ -399,10 +444,12 @@ switch (evenement)
                     ecrisImageTransparente(emeraudeX, emeraudeY, COTE_PLATEFORME, COTE_PLATEFORME, textureIconeEmeraude);
                 }
                 
+                // nombre d'émeraudes récupérés
                 char texteNombre[10];
                 sprintf(texteNombre, "x %d", emeraudes);
                 afficheChaine(texteNombre, 24, emeraudeX + 42, emeraudeY + 5);
 
+                // vies du joueur
                 if (textureCoeur != NULL) {
                     for (int i = 0; i < vie; i++) {
                         int posX = (1800) - (i * 40); 
