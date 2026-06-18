@@ -88,6 +88,7 @@ typedef struct zombie {
     int timerAnim;
     bool regardeADroite;
     int vx;
+    int vy;
     int range;
     int origineX;
     bool actif;
@@ -103,6 +104,7 @@ typedef struct squelette {
     int timerAnim;
     bool regardeADroite;
     int vx;
+    int vy;
     int range;
     int origineX;
     bool actif;

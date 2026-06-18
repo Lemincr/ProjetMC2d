@@ -544,6 +544,7 @@ Zombie initZombie(int x1, int y1) {
     z.origineX = x1; 
     z.range = COTE_PLATEFORME; 
     z.vx = 2;
+    z.vy = 0;
     z.frameActuelle = 0;
     z.timerAnim = 0; 
     z.regardeADroite = false;
@@ -589,6 +590,7 @@ Squelette initSquelette(int x1, int y1) {
     s.origineX = x1; 
     s.range = COTE_PLATEFORME; 
     s.vx = 2;
+    s.vy = 0;
     s.frameActuelle = 0;
     s.timerAnim = 0; 
     s.regardeADroite = false;
@@ -614,6 +616,7 @@ Squelette initSqueletteVide() {
     s.origineX = 0;
     s.range = 0; 
     s.vx = 0;
+    s.vy = 0;
     s.frameActuelle = 0;
     s.timerAnim = 0; 
     s.regardeADroite = false;
@@ -972,28 +975,60 @@ void gereMobs(Ecran *e, Personnage p) {
     for (int i = 0; i<MAX_SQUELETTES; i++) {
         if (!e->squelettes[i].actif) continue;
 
-        // Si le joueur est a portee, le squelette le suit
-        if (abs(e->squelettes[i].pos.x - p.playerPos.x) < 500 && abs(e->squelettes[i].pos.y - p.playerPos.y) < 150) {
+        // Gravite
+        e->squelettes[i].vy -= 1;
+        e->squelettes[i].pos.y += e->squelettes[i].vy;
+
+        // Gestion de la collision avec les plateformes (emprunte la logique du joueur)
+        Personnage dummyGrav;
+        dummyGrav.playerPos.x = e->squelettes[i].pos.x;
+        dummyGrav.playerPos.y = e->squelettes[i].pos.y;
+        dummyGrav.largeurs[0] = e->squelettes[i].largeurs[0];
+        dummyGrav.hauteurs[0] = e->squelettes[i].hauteurs[0];
+        
+        int dummyJumps = 0, dummyCoyote = 0;
+        for (int j = 0; j < MAX_PLATEFORMES; j++) {
+            if (e->solides[j].texture != NULL) {
+                gereCollisionPlateforme(&dummyGrav, e->solides[j], &(e->squelettes[i].vy), &dummyJumps, &dummyCoyote);
+            }
+        }
+        e->squelettes[i].pos.y = dummyGrav.playerPos.y;
+
+        // Determine s'il suit le joueur ou s'il fait sa ronde
+        bool tracking_player = (abs(e->squelettes[i].pos.x - p.playerPos.x) < 500 && abs(e->squelettes[i].pos.y - p.playerPos.y) < 150);
+        int intendedVx = 0;
+
+        if (tracking_player) {
             if (e->squelettes[i].pos.x < p.playerPos.x - 20) {
-                e->squelettes[i].vx = 2;
+                intendedVx = 2;
                 e->squelettes[i].regardeADroite = false;
             } else if (e->squelettes[i].pos.x > p.playerPos.x + 20) {
-                e->squelettes[i].vx = -2;
+                intendedVx = -2;
                 e->squelettes[i].regardeADroite = true;
-            } else {
-                e->squelettes[i].vx = 0;
             }
         } else {
-            // Sinon il fait sa ronde habituelle
-            if (e->squelettes[i].pos.x > e->squelettes[i].origineX + e->squelettes[i].range) { e->squelettes[i].vx = -2; e->squelettes[i].regardeADroite = true; }
-            else if (e->squelettes[i].pos.x < e->squelettes[i].origineX - e->squelettes[i].range) { e->squelettes[i].vx = 2; e->squelettes[i].regardeADroite = false; }
+            intendedVx = e->squelettes[i].vx;
+            if (intendedVx == 0) {
+                intendedVx = (e->squelettes[i].regardeADroite) ? -2 : 2;
+            }
+            if (e->squelettes[i].pos.x > e->squelettes[i].origineX + e->squelettes[i].range) { 
+                intendedVx = -2; e->squelettes[i].regardeADroite = true; 
+            } else if (e->squelettes[i].pos.x < e->squelettes[i].origineX - e->squelettes[i].range) { 
+                intendedVx = 2; e->squelettes[i].regardeADroite = false; 
+            }
         }
 
-        e->squelettes[i].pos.x += e->squelettes[i].vx;
-        e->squelettes[i].timerAnim++;
-        if (e->squelettes[i].timerAnim >= 5) {
-            e->squelettes[i].frameActuelle = (e->squelettes[i].frameActuelle + 1) % NB_SPRITES_SQUELETTE;
-            e->squelettes[i].timerAnim = 0;
+        e->squelettes[i].vx = intendedVx;
+        e->squelettes[i].pos.x += intendedVx;
+        
+        if (intendedVx != 0) {
+            e->squelettes[i].timerAnim++;
+            if (e->squelettes[i].timerAnim >= 5) {
+                e->squelettes[i].frameActuelle = (e->squelettes[i].frameActuelle + 1) % NB_SPRITES_SQUELETTE;
+                e->squelettes[i].timerAnim = 0;
+            }
+        } else {
+            e->squelettes[i].frameActuelle = 0;
         }
     }
     
