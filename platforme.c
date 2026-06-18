@@ -824,7 +824,7 @@ int checkCollisionEmeraude(Personnage perso, Piece p) {
     return 1;
 }
 
-int checkCollisionZombie(Personnage p, Zombie z) {
+int checkCollisionZombie(Personnage p, Zombie z, int vy) {
     if (!z.actif) {
     	return 0;
     }
@@ -838,7 +838,7 @@ int checkCollisionZombie(Personnage p, Zombie z) {
     	return 0;
     }
     if (p.playerPos.y < z.pos.y + 50) {
-        if (p.playerPos.y > z.pos.y) {
+        if (vy < 0 && p.playerPos.y > z.pos.y) {
             return 1;
         }
         else {
@@ -848,7 +848,7 @@ int checkCollisionZombie(Personnage p, Zombie z) {
     return -1;
 }
 
-int checkCollisionSquelette(Personnage p, Squelette s) {
+int checkCollisionSquelette(Personnage p, Squelette s, int vy) {
     if (!s.actif) {
     	return 0;
     }
@@ -862,7 +862,7 @@ int checkCollisionSquelette(Personnage p, Squelette s) {
     	return 0;
     }
     if (p.playerPos.y < s.pos.y + 87) {
-        if (p.playerPos.y > s.pos.y + 37) {
+        if (vy < 0 && p.playerPos.y > s.pos.y + 37) {
             return 1;
         }
         else {
@@ -908,7 +908,7 @@ void gereCollisionZombie(Personnage p, Zombie *z, int *inv, int *vies, int *vy) 
     if (!z->actif) {
     	return;
     }
-    int c = checkCollisionZombie(p, *z);
+    int c = checkCollisionZombie(p, *z, *vy);
     if (c == 1) {
         *vy = 10;
         z->actif = false;
@@ -931,7 +931,7 @@ void gereCollisionSquelette(Personnage p, Squelette *s, int *inv, int *vies, int
     if (!s->actif) {
     	return;
     }
-    int c = checkCollisionSquelette(p, *s);
+    int c = checkCollisionSquelette(p, *s, *vy);
     if (c == 1) {
         *vy = 10;
         s->actif = false;

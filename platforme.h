@@ -153,8 +153,8 @@ void afficheEcran(Ecran e, Camera cam);
 
 int checkCollision(Personnage perso, Plateforme plat);
 int checkCollisionEmeraude(Personnage perso, Piece p);
-int checkCollisionZombie(Personnage p, Zombie z);
-int checkCollisionSquelette(Personnage p, Squelette s);
+int checkCollisionZombie(Personnage p, Zombie z, int vy);
+int checkCollisionSquelette(Personnage p, Squelette s, int vy);
 int checkCollisionEcran(Personnage perso, Ecran e);
 
 void gereCollisionPlateforme(Personnage *perso, Plateforme plat, int *vy, int *jumps, int *coyote);
