@@ -101,6 +101,16 @@ typedef struct background {
 
 } Background;
 
+typedef struct imageNiveau {
+
+    unsigned char *texture;
+
+    int largeur;
+
+    int hauteur;
+
+} ImageNiveau;
+
 
 
 
@@ -122,6 +132,10 @@ void affichePlateforme(Plateforme p, Camera cam);
 void afficheDecoration(Decoration d, Camera cam);
 
 void afficheBackground(Background bg, Camera cam);
+
+void afficheImageNiveau(ImageNiveau image);
+
+void enleveContourRose(unsigned char *donnees, int largeur, int hauteur);
 
 int checkCollisionEmeraude(Personnage perso, Piece p);
 
@@ -231,6 +245,8 @@ static BoutonImg bJouerMenu, bQuitterMenu;
 
 static Background bgJeu;
 
+static ImageNiveau imagesNiveaux[3];
+
 static int vyPerso = 0;
 
 static int jumps = 0;
@@ -280,10 +296,10 @@ switch (evenement)
             nv2 = initEcran2();
             nv3 = initEcran3();
 
-            DonneesImageRGB *pImageFondMenu = lisBMPRGB("images/background.bmp");
+            DonneesImageRGB *pImageFondMenu = lisBMPRGB("images/debut1850.bmp");
             if (pImageFondMenu != NULL) textureFondMenu = pImageFondMenu->donneesRGB;
             
-            DonneesImageRGB *pImgJouer = lisBMPRGB("images/jouer.bmp");
+            DonneesImageRGB *pImgJouer = lisBMPRGB("images/jouer2.bmp");
             if (pImgJouer != NULL) {
                 bJouerMenu.image = pImgJouer->donneesRGB;
                 bJouerMenu.largeur = pImgJouer->largeurImage;
@@ -292,7 +308,7 @@ switch (evenement)
                 bJouerMenu.y = HauteurFenetre / 2 -60;
             }
             
-            DonneesImageRGB *pImgLeave = lisBMPRGB("images/leave.bmp");
+            DonneesImageRGB *pImgLeave = lisBMPRGB("images/leave2.bmp");
             if (pImgLeave != NULL) {
                 bQuitterMenu.image = pImgLeave->donneesRGB;
                 bQuitterMenu.largeur = pImgLeave->largeurImage;
@@ -301,12 +317,28 @@ switch (evenement)
                 bQuitterMenu.y = HauteurFenetre / 2 - 80;
             }
 
-            DonneesImageRGB *pImageBgJeu = lisBMPRGB("images/backgroundlevel1.bmp");
+            DonneesImageRGB *pImageBgJeu = lisBMPRGB("images/background1850.bmp");
             if (pImageBgJeu != NULL) {
                 bgJeu.texture = pImageBgJeu->donneesRGB;
                 bgJeu.largeur = pImageBgJeu->largeurImage;
                 bgJeu.hauteur = pImageBgJeu->hauteurImage;
             }
+            
+            char cheminImageNiveau[50];
+            for (int i = 0; i < 3; i++) {
+                sprintf(cheminImageNiveau, "images/niveau%d.bmp", i + 1);
+                DonneesImageRGB *pImageNiveau = lisBMPRGB(cheminImageNiveau);
+                imagesNiveaux[i].texture = NULL;
+                imagesNiveaux[i].largeur = 0;
+                imagesNiveaux[i].hauteur = 0;
+                if (pImageNiveau != NULL) {
+                    enleveContourRose(pImageNiveau->donneesRGB, pImageNiveau->largeurImage, pImageNiveau->hauteurImage);
+                    imagesNiveaux[i].texture = pImageNiveau->donneesRGB;
+                    imagesNiveaux[i].largeur = pImageNiveau->largeurImage;
+                    imagesNiveaux[i].hauteur = pImageNiveau->hauteurImage;
+                }
+            }
+
             DonneesImageRGB *pImgCoeur = lisBMPRGB("images/heart.bmp"); 
             if (pImgCoeur != NULL) {
                 textureCoeur = pImgCoeur->donneesRGB;
@@ -457,7 +489,7 @@ switch (evenement)
                         }
                         break;
                     case 2:
-                        if (Player.playerPos.x < 100 && Player.playerPos.y > 300) {
+                        if (Player.playerPos.x >3000) {
                             niveauActuel++;
                             Player.playerPos.x = LargeurFenetre/15;
                             Player.playerPos.y = HauteurFenetre/5;
@@ -521,6 +553,9 @@ switch (evenement)
                         break;
                 }
                 affichePersonnage(Player, cam);
+                if (niveauActuel >= 1 && niveauActuel <= 3) {
+                    afficheImageNiveau(imagesNiveaux[niveauActuel - 1]);
+                }
                 afficheChaine(chrono, 24, 30, 830);
                 
                 int emeraudeX = 100; 
@@ -612,6 +647,34 @@ switch (evenement)
 void afficheBackground(Background bg, Camera cam) {
 
     if (bg.texture != NULL) ecrisImage(0, 0, bg.largeur, bg.hauteur, bg.texture);
+
+}
+
+void afficheImageNiveau(ImageNiveau image) {
+
+    if (image.texture != NULL) {
+        int x = (LargeurFenetre - image.largeur) / 2;
+        int y = HauteurFenetre - image.hauteur - 20;
+        ecrisImageTransparente(x, y, image.largeur, image.hauteur, image.texture);
+    }
+
+}
+
+void enleveContourRose(unsigned char *donnees, int largeur, int hauteur) {
+
+    if (donnees == NULL) return;
+
+    for (int i = 0; i < largeur * hauteur; i++) {
+        unsigned char b = donnees[i * 3];
+        unsigned char v = donnees[i * 3 + 1];
+        unsigned char r = donnees[i * 3 + 2];
+
+        if (r > 50 && v < 35 && b > 50 && abs(r - b) <= 15) {
+            donnees[i * 3] = 254;
+            donnees[i * 3 + 1] = 0;
+            donnees[i * 3 + 2] = 255;
+        }
+    }
 
 }
 

@@ -16,7 +16,7 @@ void ecrisImageTransparente(int x, int y, int largeur, int hauteur, const unsign
         pixels[i * 4 + 1] = v;
         pixels[i * 4 + 2] = r;
 
-        if (r == 255 && v == 0 && b == 254) {
+        if (r > 145 && v < 45 && b > 145 && abs(r - b) <= 4) {
             pixels[i * 4 + 3] = 0;
         } else {
             pixels[i * 4 + 3] = 255;
