@@ -34,8 +34,6 @@ int main(int argc, char **argv) {
 }
 void gestionEvenement(EvenementGfx evenement)
 {
-
-static bool pleinEcran = false; 
 static EtatJeu etat = ETAT_MENU;
 
 static Personnage Player;

@@ -542,7 +542,7 @@ Zombie initZombie(int x1, int y1) {
     z.pos.x = x1;
     z.pos.y = y1+16;
     z.origineX = x1; 
-    z.range = 200; 
+    z.range = COTE_PLATEFORME; 
     z.vx = 2;
     z.frameActuelle = 0;
     z.timerAnim = 0; 
@@ -587,7 +587,7 @@ Squelette initSquelette(int x1, int y1) {
     s.pos.x = x1;
     s.pos.y = y1+16;
     s.origineX = x1; 
-    s.range = 200; 
+    s.range = COTE_PLATEFORME; 
     s.vx = 2;
     s.frameActuelle = 0;
     s.timerAnim = 0; 
@@ -1024,74 +1024,3 @@ void libereMemoireMonde(Ecran *e) {
         }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
