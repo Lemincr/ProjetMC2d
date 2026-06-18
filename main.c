@@ -485,12 +485,24 @@ switch (evenement)
                             Player.vx = 0;
                             vyPerso = 0;
                             cam.x = 0;
+                            for (int i=0; i<MAX_ZOMBIES; i++) {
+                                nv1.zombies[i].actif = false;
+                                for (int j=0; j<NB_SPRITES_ZOMBIE; j++) {
+                                    nv1.zombies[i].sprites[j] = NULL;
+                                }
+                            }
+                            for (int i=0; i<MAX_SQUELETTES; i++) {
+                                nv1.squelettes[i].actif = false;
+                                for (int j=0; j<NB_SPRITES_SQUELETTE; j++) {
+                                    nv1.squelettes[i].sprites[j] = NULL;
+                                }
+                            }
                             break; 
                         }
                         break;
                     case 2:
-                        if (Player.playerPos.x >3000) {
-                            niveauActuel++;
+                        if (Player.playerPos.x > 3000) {
+                            niveauActuel++; 
                             Player.playerPos.x = LargeurFenetre/15;
                             Player.playerPos.y = HauteurFenetre/5;
                             Player.vx = 0;
@@ -712,7 +724,7 @@ void afficheZombie(Zombie z, Camera cam) {
 
     if (sprite != NULL) {
 
-        if (z.regardeADroite) ecrisImageInversee(z.pos.x - cam.x, z.pos.y, l, h, sprite);
+        if (!z.regardeADroite) ecrisImageInversee(z.pos.x - cam.x, z.pos.y, l, h, sprite);
 
         else ecrisImageTransparente(z.pos.x - cam.x, z.pos.y, l, h, sprite);
 
@@ -962,7 +974,7 @@ void afficheSquelette(Squelette s, Camera cam) {
 
     if (sprite != NULL) {
 
-        if (s.regardeADroite) ecrisImageInversee(s.pos.x - cam.x, s.pos.y, l, h, sprite);
+        if (!s.regardeADroite) ecrisImageInversee(s.pos.x - cam.x, s.pos.y, l, h, sprite);
 
         else ecrisImageTransparente(s.pos.x - cam.x, s.pos.y, l, h, sprite);
 
@@ -973,8 +985,7 @@ void afficheSquelette(Squelette s, Camera cam) {
 void gereMobs(Ecran *e) {
     for (int i = 0; i<MAX_ZOMBIES; i++) {
         if (!e->zombies[i].actif) continue;
-        e->zombies[i].pos.x += e->zombies[i].vx;
-        if (e->zombies[i].pos.x > e->zombies[i].origineX + e->zombies[i].range) { e->zombies[i].vx = -2; e->zombies[i].regardeADroite = true; }
+        if (e->zombies[i].pos.x > e->zombies[i].origineX + e->zombies[i].range) { e->zombies[i].vx = -2; e->zombies[i].regardeADroite = false; }
         else if (e->zombies[i].pos.x < e->zombies[i].origineX - e->zombies[i].range) { e->zombies[i].vx = 2; e->zombies[i].regardeADroite = false; }
         e->zombies[i].timerAnim++;
         if (e->zombies[i].timerAnim >= 5) {
@@ -985,8 +996,7 @@ void gereMobs(Ecran *e) {
 
     for (int i = 0; i<MAX_SQUELETTES; i++) {
         if (!e->squelettes[i].actif) continue;
-        e->squelettes[i].pos.x += e->squelettes[i].vx;
-        if (e->squelettes[i].pos.x > e->squelettes[i].origineX + e->squelettes[i].range) { e->squelettes[i].vx = -2; e->squelettes[i].regardeADroite = true; }
+        if (e->squelettes[i].pos.x > e->squelettes[i].origineX + e->squelettes[i].range) { e->squelettes[i].vx = -2; e->squelettes[i].regardeADroite = false; }
         else if (e->squelettes[i].pos.x < e->squelettes[i].origineX - e->squelettes[i].range) { e->squelettes[i].vx = 2; e->squelettes[i].regardeADroite = false; }
         e->squelettes[i].timerAnim++;
         if (e->squelettes[i].timerAnim >= 5) {
@@ -1060,6 +1070,7 @@ void gereCollisionSquelette(Personnage p, Squelette *s, int *inv, int *vies, int
     if (!s->actif) return;
     int c = checkCollisionSquelette(p, *s);
     if (c == 1) {
+        *vy = 10;
         s->actif = false;
         for (int i=0; i<NB_SPRITES_SQUELETTE; i++) {
             s->sprites[i] = NULL;
@@ -1067,7 +1078,6 @@ void gereCollisionSquelette(Personnage p, Squelette *s, int *inv, int *vies, int
     }
     else if (c == -1) {
         if (*inv <= 0) {
-            *vy = 10;
             (*vies)--;
             *inv = 100;
         }
