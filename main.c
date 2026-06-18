@@ -1,54 +1,30 @@
 #include <stdlib.h> // Pour pouvoir utiliser exit()
-
 #include <stdio.h> // Pour pouvoir utiliser printf()
-
 #include <math.h> // Pour pouvoir utiliser sin() et cos()
-
 #include "GfxLib.h" // Seul cet include est necessaire pour faire du graphique
-
 #include "BmpLib.h" // Cet include permet de manipuler des fichiers BMP
-
 #include "ESLib.h" // Pour utiliser valeurAleatoire()
-
 #include "menu.h" // Pour le menu principal
-
 #include "platforme.h"
-
-
-
-
 
 // Largeur et hauteur de fenetre : definies une seule fois dans platforme.h
 
 #define ETAT_GAMEOVER 2
-
 #define VIE 4
-
-
 
 #define COTE_PLATEFORME 32
 
 #define NB_SPRITES_MARCHE 5
-
 #define NB_SPRITES_ZOMBIE 3
-
 #define NB_SPRITES_SQUELETTE 4
 
 #define MAX_PLATEFORMES 2000
-
 #define MAX_DECORATIONS 100
-
 #define MAX_ZOMBIES 5
 #define MAX_SQUELETTES 5
 
-
-
-
-
 // La fonction de gestion des evenements, appelee automatiquement par le systeme des qu'une evenement survient
 void gestionEvenement(EvenementGfx evenement);
-
-
 
 int main(int argc, char **argv) {
     initialiseGfx(argc, argv);
@@ -56,20 +32,11 @@ int main(int argc, char **argv) {
     lanceBoucleEvenements();
     return 0;
 }
-
-
-
-
-
 void gestionEvenement(EvenementGfx evenement)
-
 {
 
 static bool pleinEcran = false; 
-
-    static EtatJeu etat = ETAT_MENU;
-
-
+static EtatJeu etat = ETAT_MENU;
 
 static Personnage Player;
 
@@ -78,38 +45,22 @@ static Ecran nv2;
 static Ecran nv3;
 
 static int niveauActuel = 1;
-
 static unsigned char *textureFondMenu = NULL;
-
 static Camera cam = {0};
-
 static BoutonImg bJouerMenu, bQuitterMenu;
-
 static Background bgJeu;
-
 static ImageNiveau imagesNiveaux[3];
-
 static int vyPerso = 0;
-
 static int jumps = 0;
-
-
 static int vie = VIE;
 static unsigned char *textureCoeur = NULL;
 static int largeurCoeur = 0, hauteurCoeur = 0;
-
-
-
 static int time = 500;
 static int emeraudes = 0;
 static int frameCounter = 0;
-
 static char chrono[3];
-
 static unsigned char *textureIconeEmeraude = NULL;
-
 static int coyoteFrame = 5;
-
 static int invincibilityFrame = 0;
 
 switch (evenement)
@@ -139,7 +90,9 @@ switch (evenement)
             nv3 = initEcran3();
 
             DonneesImageRGB *pImageFondMenu = lisBMPRGB("images/debut1850.bmp");
-            if (pImageFondMenu != NULL) textureFondMenu = pImageFondMenu->donneesRGB;
+            if (pImageFondMenu != NULL) {
+                textureFondMenu = pImageFondMenu->donneesRGB;
+            }
             
             DonneesImageRGB *pImgJouer = lisBMPRGB("images/jouer2.bmp");
             if (pImgJouer != NULL) {
@@ -436,12 +389,6 @@ switch (evenement)
         case Clavier:
             switch (caractereClavier())
             {
-                case 'F':
-                case 'f':
-                    pleinEcran = !pleinEcran; 
-                    if (pleinEcran) modePleinEcran();
-                    else redimensionneFenetre(LargeurFenetre, HauteurFenetre);
-                    break;
                 case 'Q':
                 case 'q':
                     if (etat == ETAT_JEU) { Player.vx = -6; Player.regardeADroite = false; }
@@ -492,9 +439,3 @@ switch (evenement)
             break;
     }
 }
-
-
-
-
-
-
