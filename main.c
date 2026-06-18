@@ -219,6 +219,10 @@ switch (evenement)
                 if (time <= 0) {
                     etat = ETAT_GAMEOVER;
                 }
+                if (Player.starTimer > 0) {
+                    Player.starTimer--;
+                }
+
                 switch (niveauActuel) {
                     case 1:
                         for (int i = 0; i < MAX_EMERAUDES; i++) {
@@ -255,6 +259,13 @@ switch (evenement)
                                 }
                             }
                         }
+                        for (int i = 0; i < MAX_ETOILES; i++) {
+                            if (checkCollisionEtoile(Player, nv3.etoiles[i]) == 1) {
+                                Player.starTimer = 750; // 15 secondes * 50 frames
+                                nv3.etoiles[i].image = NULL;
+                            }
+                        }
+                        break;
                 }
 
                 switch (niveauActuel) {

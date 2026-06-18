@@ -20,6 +20,7 @@
 #define MAX_EMERAUDES 100
 #define MAX_ZOMBIES 5
 #define MAX_SQUELETTES 5
+#define MAX_ETOILES 5
 
 #define HAUTEUR_MAP 19
 #define LARGEUR_MAP 500
@@ -45,6 +46,7 @@ typedef struct personnage {
     int timerAnim;
     bool regardeADroite;
     int vx;
+    int starTimer;
 } Personnage;
 
 
@@ -115,6 +117,7 @@ typedef struct ecran {
 	Plateforme solides[MAX_PLATEFORMES];
 	Decoration non_solides[MAX_DECORATIONS];
 	Piece emeraudes[MAX_EMERAUDES];
+	Piece etoiles[MAX_ETOILES];
 	Zombie zombies[MAX_ZOMBIES];
 	Squelette squelettes[MAX_SQUELETTES];
 } Ecran;
@@ -153,6 +156,7 @@ void afficheEcran(Ecran e, Camera cam);
 
 int checkCollision(Personnage perso, Plateforme plat);
 int checkCollisionEmeraude(Personnage perso, Piece p);
+int checkCollisionEtoile(Personnage perso, Piece p);
 int checkCollisionZombie(Personnage p, Zombie z, int vy);
 int checkCollisionSquelette(Personnage p, Squelette s, int vy);
 int checkCollisionEcran(Personnage perso, Ecran e);
