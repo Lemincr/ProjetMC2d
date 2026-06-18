@@ -10,7 +10,13 @@
 // Largeur et hauteur de fenetre : definies une seule fois dans platforme.h
 
 #define ETAT_GAMEOVER 2
+#define ETAT_FIN 3
 #define VIE 4
+
+#define FIN_NIVEAU3_X_MIN 760
+#define FIN_NIVEAU3_X_MAX 1000
+#define FIN_NIVEAU3_Y_MIN 250
+#define FIN_NIVEAU3_Y_MAX 470
 
 #define COTE_PLATEFORME 32
 
@@ -47,6 +53,7 @@ static unsigned char *textureFondMenu = NULL;
 static Camera cam = {0};
 static BoutonImg bJouerMenu, bQuitterMenu;
 static Background bgJeu;
+static Background bgFin;
 static ImageNiveau imagesNiveaux[3];
 static int vyPerso = 0;
 static int jumps = 0;
@@ -115,6 +122,13 @@ switch (evenement)
                 bgJeu.texture = pImageBgJeu->donneesRGB;
                 bgJeu.largeur = pImageBgJeu->largeurImage;
                 bgJeu.hauteur = pImageBgJeu->hauteurImage;
+            }
+
+            DonneesImageRGB *pImageFin = lisBMPRGB("images/End-screen.bmp");
+            if (pImageFin != NULL) {
+                bgFin.texture = pImageFin->donneesRGB;
+                bgFin.largeur = pImageFin->largeurImage;
+                bgFin.hauteur = pImageFin->hauteurImage;
             }
             
             char cheminImageNiveau[50];
@@ -317,13 +331,13 @@ switch (evenement)
                         }
                         break;
                     case 3:
-                        if (Player.playerPos.x > 9999) {
-                            niveauActuel++;
-                            Player.playerPos.x = LargeurFenetre/15;
-                            Player.playerPos.y = HauteurFenetre/5;
+                        if (Player.playerPos.x >= FIN_NIVEAU3_X_MIN &&
+                            Player.playerPos.x <= FIN_NIVEAU3_X_MAX &&
+                            Player.playerPos.y >= FIN_NIVEAU3_Y_MIN &&
+                            Player.playerPos.y <= FIN_NIVEAU3_Y_MAX) {
                             Player.vx = 0;
                             vyPerso = 0;
-                            cam.x = 0;
+                            etat = ETAT_FIN;
                             break; 
                         }
                         break;
@@ -354,6 +368,9 @@ switch (evenement)
                 afficheChaine("GAME OVER", 40, LargeurFenetre / 2 - 100, HauteurFenetre / 2 + 20);
                 couleurCourante(255, 255, 255);
                 afficheChaine("Appuyez sur R pour revivre ou ECHAP pour quitter", 18, LargeurFenetre / 2 - 200, HauteurFenetre / 2 - 40);
+            }
+            else if (etat == ETAT_FIN) {
+                afficheBackground(bgFin, cam);
             }
             else {
                 afficheBackground(bgJeu, cam);
