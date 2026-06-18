@@ -243,6 +243,7 @@ switch (evenement)
                                 }
                             }
                         }
+                        break;
                     case 3:
                         for (int i = 0; i < MAX_EMERAUDES; i++) {
                             if (checkCollisionEmeraude(Player, nv3.emeraudes[i]) == 1) {
@@ -258,13 +259,13 @@ switch (evenement)
 
                 switch (niveauActuel) {
                     case 1:
-                        gereMobs(&nv1);
+                        gereMobs(&nv1, Player);
                         break;
                     case 2:
-                        gereMobs(&nv2);
+                        gereMobs(&nv2, Player);
                         break;
                     case 3:
-                        gereMobs(&nv2);
+                        gereMobs(&nv3, Player);
                         break;
                 }
 
