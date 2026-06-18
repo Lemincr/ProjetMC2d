@@ -175,6 +175,7 @@ switch (evenement)
                 Player.playerPos.x += Player.vx;
 
                 vyPerso -= 1;
+                Player.playerPos.y += vyPerso;
                 
                 switch (niveauActuel) {
                     case 1:
@@ -187,7 +188,6 @@ switch (evenement)
                         gereCollisionEcran(&Player, &nv3, &vyPerso, &jumps, &coyoteFrame, &invincibilityFrame, &vie);
                         break;
                 }
-                Player.playerPos.y += vyPerso;
 
                 if (Player.playerPos.y < -100) {
                     vie--;

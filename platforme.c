@@ -880,15 +880,24 @@ int checkCollisionEcran(Personnage perso, Ecran e) {
 
 void gereCollisionPlateforme(Personnage *perso, Plateforme plat, int *vy, int *jumps, int *coyote) {
     if (checkCollision(*perso, plat) == 1) {
-        if ((caractereClavier() == 'z') || (caractereClavier() == 'Z')) { 
-        	if (*vy >= 0) {
-        		return;
-        	}
+        int h = perso->hauteurs[0];
+        int basPerso = perso->playerPos.y - h/4;
+        int hautPlateforme = plat.coinInferieurGauche.y + plat.hauteur;
+
+        if (*vy > 0 && basPerso >= hautPlateforme - 4) {
+            return;
         }
-        *vy = 0; 
-        perso->playerPos.y = plat.coinInferieurGauche.y + plat.hauteur + perso->hauteurs[0]/4 + 1; 
-        *jumps = 1;
-        *coyote = 5;
+
+        if (*vy > 0 && perso->playerPos.y < plat.coinInferieurGauche.y) {
+            *vy = 0;
+            perso->playerPos.y = plat.coinInferieurGauche.y - h/4 - 1;
+        }
+        else {
+            *vy = 0; 
+            perso->playerPos.y = hautPlateforme + h/4 + 1; 
+            *jumps = 1;
+            *coyote = 5;
+        }
     }
 }
 
