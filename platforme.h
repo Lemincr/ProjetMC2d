@@ -160,4 +160,4 @@ void gereCollisionZombie(Personnage p, Zombie *z, int *inv, int *vies, int *vy);
 void gereCollisionSquelette(Personnage p, Squelette *s, int *inv, int *vies, int *vy);
 void gereCollisionEcran(Personnage *perso, Ecran *e, int *vy, int *jumps, int *coyote, int *invincibilityFrame, int *vie);
 
-void gereMobs(Ecran *e);
+void gereMobs(Ecran *e, Personnage p);

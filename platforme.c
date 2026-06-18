@@ -956,7 +956,7 @@ void gereCollisionEcran(Personnage *perso, Ecran *e, int *vy, int *jumps, int *c
     }
 }
 
-void gereMobs(Ecran *e) {
+void gereMobs(Ecran *e, Personnage p) {
     for (int i = 0; i<MAX_ZOMBIES; i++) {
         if (!e->zombies[i].actif) continue;
         e->zombies[i].pos.x += e->zombies[i].vx;
@@ -971,9 +971,25 @@ void gereMobs(Ecran *e) {
 
     for (int i = 0; i<MAX_SQUELETTES; i++) {
         if (!e->squelettes[i].actif) continue;
+
+        // Si le joueur est a portee, le squelette le suit
+        if (abs(e->squelettes[i].pos.x - p.playerPos.x) < 500 && abs(e->squelettes[i].pos.y - p.playerPos.y) < 150) {
+            if (e->squelettes[i].pos.x < p.playerPos.x - 20) {
+                e->squelettes[i].vx = 2;
+                e->squelettes[i].regardeADroite = false;
+            } else if (e->squelettes[i].pos.x > p.playerPos.x + 20) {
+                e->squelettes[i].vx = -2;
+                e->squelettes[i].regardeADroite = true;
+            } else {
+                e->squelettes[i].vx = 0;
+            }
+        } else {
+            // Sinon il fait sa ronde habituelle
+            if (e->squelettes[i].pos.x > e->squelettes[i].origineX + e->squelettes[i].range) { e->squelettes[i].vx = -2; e->squelettes[i].regardeADroite = true; }
+            else if (e->squelettes[i].pos.x < e->squelettes[i].origineX - e->squelettes[i].range) { e->squelettes[i].vx = 2; e->squelettes[i].regardeADroite = false; }
+        }
+
         e->squelettes[i].pos.x += e->squelettes[i].vx;
-        if (e->squelettes[i].pos.x > e->squelettes[i].origineX + e->squelettes[i].range) { e->squelettes[i].vx = -2; e->squelettes[i].regardeADroite = true; }
-        else if (e->squelettes[i].pos.x < e->squelettes[i].origineX - e->squelettes[i].range) { e->squelettes[i].vx = 2; e->squelettes[i].regardeADroite = false; }
         e->squelettes[i].timerAnim++;
         if (e->squelettes[i].timerAnim >= 5) {
             e->squelettes[i].frameActuelle = (e->squelettes[i].frameActuelle + 1) % NB_SPRITES_SQUELETTE;
